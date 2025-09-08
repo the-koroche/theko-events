@@ -6,7 +6,8 @@
 
     <groupId>org.theko.events</groupId>
     <artifactId>theko-events</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
+    <packaging>jar</packaging>
 
     <name>Theko-Events</name>
     <description>Very simple events manager.</description>
