@@ -44,9 +44,9 @@ import java.util.stream.Collectors;
  * or concurrent collections if used in multi-threaded environments.
  * </p>
  *
- * @param <E> the type of event being dispatched, must extend {@link Event}
- * @param <L> the type of listener that can receive events, must extend {@link Listener}
- * @param <T> the classification type used for event routing and mapping
+ * @param E the type of event being dispatched, must extend {@link Event}
+ * @param L the type of listener that can receive events, must extend {@link Listener}
+ * @param T the classification type used for event routing and mapping
  *
  * @author Theko
  * @since 1.0
@@ -76,6 +76,12 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * for efficient removal and lookup operations.
      */
     private final Map<EventConsumer<E>, EventConsumerWrapper> consumerWrappers = new HashMap<>();
+
+    /**
+     * Manager instance that provides simplified access to listener management operations
+     * for this dispatcher. Created automatically and shared for the lifetime of the dispatcher.
+     */
+    private final ListenersManager<E, L, T> listenersManager = new ListenersManager<>(this);
     
     /**
      * Mapping from event types to their corresponding event handlers.
@@ -184,47 +190,10 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
     }
 
     /**
-     * Creates and returns a new {@link EventMap} instance configured with the same
-     * type parameters as this event dispatcher.
-     * <p>
-     * This factory method provides a convenient way to create event maps that are
-     * type-compatible with this dispatcher. The returned {@code EventMap} can be
-     * populated with event handlers and then applied to this dispatcher using
-     * {@link #setEventMap(Map)}.
-     * </p>
-     *
-     * <p>
-     * <strong>Typical Usage:</strong>
-     * <pre>{@code
-     * EventDispatcher<MyEvent, MyListener, MyEventType> dispatcher = new EventDispatcher<>();
-     * EventMap<MyEvent, MyListener, MyEventType> eventMap = dispatcher.createEventMap();
+     * Creates a new empty {@link EventMap} with compatible type parameters.
      * 
-     * // Populate the event map with handlers
-     * eventMap.put(MyEventType.OPEN, MyListener::onOpen);
-     * eventMap.put(MyEventType.CLOSE, MyListener::onClose);
-     * eventMap.put(MyEventType.UPDATE, MyListener::onUpdate);
-     * 
-     * // Apply the configured event map to the dispatcher
-     * dispatcher.setEventMap(eventMap);
-     * }</pre>
-     * </p>
-     *
-     * <p>
-     * The returned {@code EventMap} is empty and must be populated with event handlers
-     * before use. This method is particularly useful when building complex event mapping
-     * configurations that require multiple setup steps.
-     * </p>
-     *
-     * @return a new, empty {@link EventMap} instance configured with the same type
-     *         parameters {@code <E, L, T>} as this event dispatcher
-     *
-     * @see EventMap
+     * @return a new empty event map configured for this dispatcher's types
      * @see #setEventMap(Map)
-     * @see EventHandler
-     *
-     * @apiNote This method does not affect the current event mapping of the dispatcher.
-     *          The returned map is independent and must be explicitly set using
-     *          {@link #setEventMap(Map)} to become active.
      */
     public EventMap<E, L, T> createEventMap() {
         return new EventMap<E, L, T>();
@@ -365,6 +334,15 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
                 .flatMap(List::stream)
                 .map(wrapper -> wrapper.consumer)
                 .collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
+     * Returns the listener manager for this dispatcher.
+     * 
+     * @return the listener manager instance, never null
+     */
+    public ListenersManager<E, L, T> getListenersManager() {
+        return listenersManager;
     }
 
     /**
