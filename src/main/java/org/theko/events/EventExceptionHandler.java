@@ -27,9 +27,9 @@ package org.theko.events;
  * </ul>
  * </p>
  *
- * @param <L> the type of listener that was processing the event when the exception occurred
- * @param <E> the type of {@link Event} being processed when the exception was thrown
- * @param <T> the type of {@link Throwable} that this handler can process
+ * @param L the type of listener that was processing the event when the exception occurred
+ * @param E the type of {@link Event} being processed when the exception was thrown
+ * @param T the type of {@link Throwable} that this handler can process
  *
  * @author Theko
  * @since 1.0

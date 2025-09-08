@@ -42,8 +42,8 @@ package org.theko.events;
  * });
  * }</pre>
  *
- * @param <L> the type of listener that will receive the event notification
- * @param <E> the type of {@link Event} being handled, must extend {@link Event}
+ * @param L the type of listener that will receive the event notification
+ * @param E the type of {@link Event} being handled, must extend {@link Event}
  *
  * @author Theko
  * @since 1.0

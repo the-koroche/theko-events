@@ -23,8 +23,8 @@ package org.theko.events;
  * </ul>
  * </p>
  *
- * @param <E> the type of event this listener can handle, must extend {@link Event}
- * @param <T> the classification type used to categorize or route events
+ * @param E the type of event this listener can handle, must extend {@link Event}
+ * @param T the classification type used to categorize or route events
  *
  * @author Theko
  * @since 1.0

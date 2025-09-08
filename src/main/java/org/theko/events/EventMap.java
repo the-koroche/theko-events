@@ -54,9 +54,9 @@ import java.util.HashMap;
  * </ul>
  * </p>
  *
- * @param <E> the type of event being handled, must extend {@link Event}
- * @param <L> the type of listener that will receive the events, must extend {@link Listener}
- * @param <T> the classification type used for event routing
+ * @param E the type of event being handled, must extend {@link Event}
+ * @param L the type of listener that will receive the events, must extend {@link Listener}
+ * @param T the classification type used for event routing
  *
  * @author Theko
  * @since 1.0

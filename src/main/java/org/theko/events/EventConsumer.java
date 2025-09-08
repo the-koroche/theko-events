@@ -27,7 +27,7 @@ package org.theko.events;
  * </ul>
  * </p>
  *
- * @param <E> the type of event this consumer can handle, must extend {@link Event}
+ * @param E the type of event this consumer can handle, must extend {@link Event}
  *
  * @author Theko
  * @since 1.0
