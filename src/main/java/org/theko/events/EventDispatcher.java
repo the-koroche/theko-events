@@ -372,13 +372,16 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      */
     public void dispatch(T eventType, E event) {
         EventHandler<L, E> handler = eventMap.get(eventType);
-        if (handler == null) return;
 
         // Process listeners in priority order
         for (L listener : getListenersInPriorityOrder()) {
+            if (event.isConsumed()) break;
+            if (listener == null) continue;
             try {
+                listener.onEvent(eventType, event);
+
+                if (handler == null) continue;
                 handler.handle(listener, event);
-                if (event.isConsumed()) break;
             } catch (Throwable ex) {
                 handleException(listener, event, ex);
             }
@@ -387,8 +390,9 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
         // Process consumers for the specific event type
         for (EventConsumerWrapper wrapper : getConsumersForEventType(eventType)) {
             try {
-                wrapper.consume(event);
                 if (event.isConsumed()) break;
+                if (wrapper == null) continue;
+                wrapper.consume(event);
             } catch (Throwable ex) {
                 handleException(null, event, ex);
             }
