@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>Theko-Events</name>
-    <description>Very simple events manager.</description>
+    <description>An event system providing a library for event-driven architecture in Java applications.</description>
 
     <licenses>
         <license>
@@ -22,7 +22,7 @@
 
     <developers>
         <developer>
-            <id>the-koro</id>
+            <id>the-koroche</id>
             <name>Alex Soloviov</name>
             <email>thekoroche@gmail.com</email>
             <roles>
@@ -31,16 +31,59 @@
         </developer>
     </developers>
 
+    <scm>
+        <connection>scm:git:git://github.com/the-koroche/theko-event.git</connection>
+        <developerConnection>scm:git:ssh://github.com/the-koroche/theko-event.git</developerConnection>
+        <url>https://github.com/the-koroche/theko-events</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
     <properties>
         <java.version>14</java.version>
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${basedir}</directory>
+                <includes>
+                    <include>LICENSE</include>
+                </includes>
+                <targetPath>META-INF</targetPath>
+                <filtering>false</filtering>
+            </resource>
+        </resources>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals><goal>sign</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.8.0</version>
+                <configuration>
+                    <failOnError>false</failOnError>
+                </configuration>
                 <executions>
                     <execution>
                         <id>generate-javadocs</id>
