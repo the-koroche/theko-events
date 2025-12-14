@@ -8,13 +8,13 @@ package org.theko.events;
  * and exceptions that may be thrown by {@link EventHandler} implementations or
  * listener methods during event processing. This prevents exceptions from disrupting
  * the entire event processing pipeline.
- * </p>
+ * 
  *
  * <p>
  * This interface supports exception handler chaining through the {@link #andThen(EventExceptionHandler)}
  * method, allowing multiple exception handlers to be composed into a single handler
  * that processes exceptions in sequence.
- * </p>
+ * 
  *
  * <p>
  * <strong>Common Use Cases:</strong>
@@ -25,11 +25,11 @@ package org.theko.events;
  *   <li>Notifying administrators or monitoring systems about critical errors</li>
  *   <li>Cleanup and resource management after failed event processing</li>
  * </ul>
- * </p>
+ * 
  *
- * @param L the type of listener that was processing the event when the exception occurred
- * @param E the type of {@link Event} being processed when the exception was thrown
- * @param T the type of {@link Throwable} that this handler can process
+ * @param <L> the type of listener that was processing the event when the exception occurred
+ * @param <E> the type of {@link Event} being processed when the exception was thrown
+ * @param <T> the type of {@link Throwable} that this handler can process
  *
  * @author Theko
  * @since 1.0
@@ -46,7 +46,7 @@ public interface EventExceptionHandler<L, E extends Event, T extends Throwable> 
      * This method is invoked when an exception is thrown by an {@link EventHandler}
      * or listener method during event processing. The implementation should define
      * the appropriate error handling strategy for the specific exception type.
-     * </p>
+     * 
      *
      * <p>
      * <strong>Implementation Guidelines:</strong>
@@ -56,7 +56,7 @@ public interface EventExceptionHandler<L, E extends Event, T extends Throwable> 
      *   <li>Should handle null parameters gracefully if they are possible in the context</li>
      *   <li>Consider thread safety if the event system processes events concurrently</li>
      * </ul>
-     * </p>
+     * 
      *
      * @param listener the listener instance that was processing the event when the exception occurred,
      *                 may be {@code null} in some edge cases
@@ -73,13 +73,11 @@ public interface EventExceptionHandler<L, E extends Event, T extends Throwable> 
      * The composed handler will invoke {@code this.handle()} first, followed by
      * {@code next.handle()} for the same exception. If either handler throws an exception,
      * it will be propagated to the caller and the subsequent handler will not be invoked.
-     * </p>
-     *
+     * 
      * <p>
      * This method enables the creation of exception handler chains for layered error
      * processing strategies.
-     * </p>
-     *
+     * 
      * @param next the handler to invoke after this handler processes the exception,
      *             must not be {@code null}
      * @return a composed handler that executes both handlers in sequence

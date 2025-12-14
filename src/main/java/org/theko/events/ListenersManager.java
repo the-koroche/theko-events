@@ -8,11 +8,11 @@ import java.util.List;
  * wrapped dispatcher while providing a cleaner API focused specifically on listener management.
  * 
  * <p>This class is particularly useful when you want to expose only listener management
- * functionality while hiding the full event dispatch capabilities.</p>
+ * functionality while hiding the full event dispatch capabilities.
  *
- * @param E the type of event being handled, must extend {@link Event}
- * @param L the type of listener being managed, must extend {@link Listener}
- * @param T the classification type used for event routing
+ * @param <E> the type of event being handled, must extend {@link Event}
+ * @param <L> the type of listener being managed, must extend {@link Listener}
+ * @param <T> the classification type used for event routing
  * 
  * @author Theko
  * @since 1.1

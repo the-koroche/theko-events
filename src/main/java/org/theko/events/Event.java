@@ -6,12 +6,12 @@ package org.theko.events;
  * Represents an occurrence of interest that has happened at a specific moment in time.
  * Events are immutable data carriers that provide contextual information about what occurred.
  * Concrete subclasses should define specific event types with relevant data fields.
- * </p>
+ * 
  *
  * <p>
  * Events support a consumption mechanism to prevent further processing by subsequent handlers
  * in the event propagation chain. Once consumed, an event should typically not be processed further.
- * </p>
+ * 
  *
  * <p>
  * Each event instance automatically records its creation timestamp using
@@ -22,11 +22,11 @@ package org.theko.events;
  *   <li>Debugging and tracing event flow</li>
  *   <li>Temporal analysis of system behavior</li>
  * </ul>
- * </p>
+ * 
  *
  * <p><strong>Thread Safety:</strong> This class and its subclasses should be designed to be
  * thread-safe and immutable after construction. Event objects are typically shared across
- * multiple threads in an event processing system.</p>
+ * multiple threads in an event processing system.
  *
  * @author Theko
  * @since 1.0
@@ -42,7 +42,7 @@ public abstract class Event {
      * This value is set once during object construction and remains immutable throughout
      * the event's lifecycle. The timestamp represents when the event object was instantiated,
      * which may differ slightly from when the actual occurrence happened.
-     * </p>
+     * 
      */
     protected final long timestamp = System.currentTimeMillis();
 
@@ -52,9 +52,16 @@ public abstract class Event {
      * A consumed event should not be processed by subsequent handlers in the event chain.
      * This mechanism allows handlers to indicate that they have fully handled the event
      * and no further processing is required.
-     * </p>
+     * 
      */
     private boolean isConsumed;
+
+    /**
+     * Creates a new event instance.
+     */
+    protected Event() {
+        // Default constructor
+    }
 
     /**
      * Returns the creation timestamp of this event.
@@ -70,7 +77,7 @@ public abstract class Event {
      * <p>
      * Once an event is consumed, subsequent event handlers should typically skip processing it.
      * This method is idempotent - calling it multiple times has the same effect as calling it once.
-     * </p>
+     * 
      *
      * @apiNote Consumption is typically used for events that represent user interactions
      *          or system actions where only one handler should respond.

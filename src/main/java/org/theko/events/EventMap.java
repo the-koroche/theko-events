@@ -9,13 +9,13 @@ import java.util.HashMap;
  * {@code EventMap} extends {@link HashMap} to provide a type-safe mapping between
  * event classification types ({@code T}) and the {@link EventHandler} instances that
  * know how to deliver events of type {@code E} to listeners of type {@code L}.
- * </p>
+ * 
  *
  * <p>
  * This class serves as the central registry for event routing configuration, enabling
  * the event system to efficiently dispatch events to the appropriate listener methods
  * based on their classification type.
- * </p>
+ * 
  *
  * <p>
  * <strong>Type Parameters:</strong>
@@ -24,7 +24,7 @@ import java.util.HashMap;
  *   <li>{@code L} - The type of {@link Listener} that will receive the events</li>
  *   <li>{@code T} - The classification type used to categorize and route events</li>
  * </ul>
- * </p>
+ * 
  *
  * <p>
  * <strong>Usage Example:</strong>
@@ -42,7 +42,7 @@ import java.util.HashMap;
  *     handler.handle(listener, event);
  * }
  * }</pre>
- * </p>
+ * 
  *
  * <p>
  * <strong>Implementation Notes:</strong>
@@ -52,11 +52,11 @@ import java.util.HashMap;
  *   <li>Not thread-safe by default; concurrent access requires external synchronization</li>
  *   <li>Typically used as a building block within {@link EventDispatcher} implementations</li>
  * </ul>
- * </p>
+ * 
  *
- * @param E the type of event being handled, must extend {@link Event}
- * @param L the type of listener that will receive the events, must extend {@link Listener}
- * @param T the classification type used for event routing
+ * @param <E> the type of event being handled, must extend {@link Event}
+ * @param <L> the type of listener that will receive the events, must extend {@link Listener}
+ * @param <T> the classification type used for event routing
  *
  * @author Theko
  * @since 1.0
@@ -66,4 +66,10 @@ import java.util.HashMap;
  * @see Event
  */
 public class EventMap<E extends Event, L extends Listener<E, T>, T> extends HashMap<T, EventHandler<L, E>> {
+
+    /**
+     * Creates a new empty event map.
+     */
+    public EventMap() {
+    }
 }

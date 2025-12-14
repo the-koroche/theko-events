@@ -12,12 +12,12 @@ package org.theko.events;
  *   <li>Implementing filtering or interception patterns</li>
  *   <li>Managing dependencies between event handlers</li>
  * </ul>
- * </p>
+ * 
  *
  * <p>
  * The priority levels are ordered from highest to lowest as follows:
  * {@code HIGHEST > HIGH > NORMAL > LOW}
- * </p>
+ * 
  *
  * <p>
  * <strong>Execution Order Example:</strong>
@@ -29,12 +29,12 @@ package org.theko.events;
  *   <li>Listeners with {@code NORMAL} priority (default if not specified)</li>
  *   <li>Listeners with {@code LOW} priority</li>
  * </ol>
- * </p>
+ * 
  *
  * <p>
  * <strong>Note:</strong> The relative order of listeners with the same priority level
  * is implementation-defined and should not be relied upon.
- * </p>
+ * 
  *
  * @author Theko
  * @since 1.0

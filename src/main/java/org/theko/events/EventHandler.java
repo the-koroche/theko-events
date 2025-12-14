@@ -7,13 +7,13 @@ package org.theko.events;
  * {@code EventHandler} serves as a bridge that knows how to deliver a particular
  * {@link Event} to the appropriate method of a listener. This decouples the event
  * dispatch mechanism from the specific listener method signatures.
- * </p>
+ * 
  *
  * <p>
  * This interface enables dynamic event routing by allowing the {@link EventDispatcher}
  * to invoke the correct listener method without requiring hardcoded method calls or
  * reflection-based invocation at runtime.
- * </p>
+ * 
  *
  * <p>
  * <strong>Implementation Patterns:</strong>
@@ -23,10 +23,10 @@ package org.theko.events;
  *   <li>Lambda expressions</li>
  *   <li>Anonymous class implementations for complex routing logic</li>
  * </ul>
- * </p>
+ * 
  *
  * <p><strong>Thread Safety:</strong> Implementations should be thread-safe if the
- * event system dispatches events concurrently from multiple threads.</p>
+ * event system dispatches events concurrently from multiple threads.
  *
  * <pre>{@code
  * // Example: Registering an event handler using method reference
@@ -42,8 +42,8 @@ package org.theko.events;
  * });
  * }</pre>
  *
- * @param L the type of listener that will receive the event notification
- * @param E the type of {@link Event} being handled, must extend {@link Event}
+ * @param <L> the type of listener that will receive the event notification
+ * @param <E> the type of {@link Event} being handled, must extend {@link Event}
  *
  * @author Theko
  * @since 1.0
@@ -60,7 +60,7 @@ public interface EventHandler<L, E extends Event> {
      * This method is responsible for invoking the correct listener method with
      * the provided event. The implementation should handle any necessary type
      * casting, parameter extraction, or error handling required for the invocation.
-     * </p>
+     * 
      *
      * <p>
      * <strong>Contract:</strong>
@@ -70,7 +70,7 @@ public interface EventHandler<L, E extends Event> {
      *   <li>Null parameters should be handled appropriately (typically with {@link NullPointerException})</li>
      *   <li>The method should be efficient as it may be called frequently during event dispatch</li>
      * </ul>
-     * </p>
+     * 
      *
      * @param listener the listener instance to notify, must not be {@code null}
      * @param event the event to deliver to the listener, must not be {@code null}

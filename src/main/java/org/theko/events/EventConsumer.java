@@ -6,12 +6,12 @@ package org.theko.events;
  * Event consumers are responsible for processing events that are dispatched through
  * the event system. Each consumer defines the business logic to execute when an event
  * of the specified type occurs.
- * </p>
+ * 
  *
  * <p>
  * This interface is designed to be implemented as a lambda expression, method reference,
  * or anonymous class, making it easy to define event handling behavior concisely.
- * </p>
+ * 
  *
  * <p>
  * <strong>Implementation Guidelines:</strong>
@@ -25,9 +25,9 @@ package org.theko.events;
  *   <li>Consumers can call {@link Event#consume()} on the event to prevent
  *       further processing by subsequent consumers</li>
  * </ul>
- * </p>
+ * 
  *
- * @param E the type of event this consumer can handle, must extend {@link Event}
+ * @param <E> the type of event this consumer can handle, must extend {@link Event}
  *
  * @author Theko
  * @since 1.0
@@ -44,14 +44,14 @@ public interface EventConsumer<E extends Event> {
      * the event system. Implementations should contain the logic to handle the event,
      * such as updating application state, triggering side effects, or propagating
      * the event to other systems.
-     * </p>
+     * 
      *
      * <p>
      * <strong>Exception Handling:</strong> Implementations should handle exceptions
      * appropriately. Uncaught exceptions may terminate the event processing pipeline
      * or be logged and swallowed by the event dispatcher, depending on the
      * implementation of the event dispatcher.
-     * </p>
+     * 
      *
      * @param event the event to be consumed, never {@code null}
      * @throws NullPointerException if the provided event is {@code null}

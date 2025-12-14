@@ -6,12 +6,12 @@ package org.theko.events;
  * Listeners provide a mechanism to respond to events based on both the event type
  * and an additional classification type. This allows for more granular event handling
  * where the same event class can be processed differently depending on context.
- * </p>
+ * 
  *
  * <p>
  * This interface provides a default no-op implementation of {@link #onEvent(Object, Event)}
  * to allow subclasses to override only the event types they are interested in handling.
- * </p>
+ * 
  *
  * <p>
  * <strong>Typical Usage Patterns:</strong>
@@ -21,10 +21,10 @@ package org.theko.events;
  *   <li>Creating hierarchical or categorized event processing systems</li>
  *   <li>Implementing state-dependent event handling</li>
  * </ul>
- * </p>
+ * 
  *
- * @param E the type of event this listener can handle, must extend {@link Event}
- * @param T the classification type used to categorize or route events
+ * @param <E> the type of event this listener can handle, must extend {@link Event}
+ * @param <T> the classification type used to categorize or route events
  *
  * @author Theko
  * @since 1.0
@@ -40,7 +40,7 @@ public interface Listener<E extends Event, T> {
      * the event type {@code E} and classification type {@code T} is dispatched.
      * The default implementation does nothing, allowing implementations to
      * override only the event types they need to handle.
-     * </p>
+     * 
      *
      * <p>
      * <strong>Implementation Notes:</strong>
@@ -50,7 +50,7 @@ public interface Listener<E extends Event, T> {
      *   <li>Handle exceptions within the method to avoid disrupting the event processing pipeline</li>
      *   <li>The method should be thread-safe if events are processed concurrently</li>
      * </ul>
-     * </p>
+     * 
      *
      * @param type the classification type that categorizes this event instance,
      *             used for routing or contextual processing. May be {@code null}
