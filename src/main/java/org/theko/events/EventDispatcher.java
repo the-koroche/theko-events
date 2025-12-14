@@ -371,7 +371,8 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * @throws NullPointerException if either eventType or event is {@code null}
      */
     public void dispatch(T eventType, E event) {
-        EventHandler<L, E> handler = eventMap.get(eventType);
+        if (event == null) throw new NullPointerException("Event is null.");
+        EventHandler<L, E> handler = (eventType == null) ? null : eventMap.get(eventType);
 
         // Process listeners in priority order
         for (L listener : getListenersInPriorityOrder()) {
@@ -397,6 +398,17 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
                 handleException(null, event, ex);
             }
         }
+    }
+    
+    /**
+     * Convenience method for dispatching an event without specifying an event type.
+     * Equivalent to calling {@link #dispatch(Object, Event)} with the first argument being {@code null}.
+     * 
+     * @param event the event instance to dispatch
+     * @throws NullPointerException if event is {@code null}
+     */
+    public void dispatch(E event) {
+        dispatch(null, event);
     }
 
     /**
