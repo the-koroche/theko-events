@@ -1,39 +1,21 @@
 package org.theko.events;
 
 /**
- * A functional interface that defines the binding between a specific listener method
- * and an event type in the event dispatch system.
+ * Defines how a specific {@link Event} is delivered to a listener.
  * <p>
- * {@code EventHandler} serves as a bridge that knows how to deliver a particular
- * {@link Event} to the appropriate method of a listener. This decouples the event
- * dispatch mechanism from the specific listener method signatures.
- * 
+ * {@code EventHandler} is a small functional adapter used by the event system
+ * to invoke the correct listener method for a given event type.
  *
  * <p>
- * This interface enables dynamic event routing by allowing the {@link EventDispatcher}
- * to invoke the correct listener method without requiring hardcoded method calls or
- * reflection-based invocation at runtime.
- * 
- *
- * <p>
- * <strong>Implementation Patterns:</strong>
- * Typically implemented using:
- * <ul>
- *   <li>Method references (e.g., {@code MyListener::onSpecificEvent})</li>
- *   <li>Lambda expressions</li>
- *   <li>Anonymous class implementations for complex routing logic</li>
- * </ul>
- * 
- *
- * <p><strong>Thread Safety:</strong> Implementations should be thread-safe if the
- * event system dispatches events concurrently from multiple threads.
+ * The dispatcher does not know which listener method should be called.
+ * It only knows the event and the listener instance. This interface
+ * provides the logic that connects them.
  *
  * <pre>{@code
- * // Example: Registering an event handler using method reference
- * eventMap.put(ResourceEventType.OPENED, ResourceListener::onOpened);
+ * eventMap.put(EventType.OPENED, ResourceListener::onOpened);
  *
- * // Example: Using lambda for custom handling logic
- * eventMap.put(ResourceEventType.CLOSED, (listener, event) -> {
+ * // Custom dispatch logic
+ * eventMap.put(EventType.CLOSED, (listener, event) -> {
  *     if (event.isSuccessful()) {
  *         listener.onClosedSuccessfully(event);
  *     } else {
@@ -42,8 +24,11 @@ package org.theko.events;
  * });
  * }</pre>
  *
- * @param <L> the type of listener that will receive the event notification
- * @param <E> the type of {@link Event} being handled, must extend {@link Event}
+ * <p><strong>Thread safety:</strong>
+ * Implementations must be thread-safe if events are dispatched concurrently.
+ *
+ * @param <L> listener type
+ * @param <E> event type
  *
  * @author Theko
  * @since 1.0
@@ -55,28 +40,16 @@ package org.theko.events;
 public interface EventHandler<L, E extends Event> {
     
     /**
-     * Delivers the specified event to the appropriate method of the given listener.
+     * Handles the given event for the specified listener.
      * <p>
-     * This method is responsible for invoking the correct listener method with
-     * the provided event. The implementation should handle any necessary type
-     * casting, parameter extraction, or error handling required for the invocation.
-     * 
+     * This method is called by the {@link EventDispatcher} during event dispatch.
+     * The implementation is responsible for invoking the appropriate listener method.
      *
-     * <p>
-     * <strong>Contract:</strong>
-     * <ul>
-     *   <li>The method must not return any value (void return type)</li>
-     *   <li>The method should not throw unchecked exceptions unless absolutely necessary</li>
-     *   <li>Null parameters should be handled appropriately (typically with {@link NullPointerException})</li>
-     *   <li>The method should be efficient as it may be called frequently during event dispatch</li>
-     * </ul>
-     * 
+     * @param listener listener instance, must not be {@code null}
+     * @param event event instance, must not be {@code null}
      *
-     * @param listener the listener instance to notify, must not be {@code null}
-     * @param event the event to deliver to the listener, must not be {@code null}
-     * @throws NullPointerException if either {@code listener} or {@code event} is {@code null}
-     * @throws RuntimeException if the handler encounters an error during event delivery
-     * @throws ClassCastException if the listener cannot handle the specific event type
+     * @throws NullPointerException if {@code listener} or {@code event} is {@code null}
+     * @throws RuntimeException if an error occurs while handling the event
      */
     void handle(L listener, E event);
 }
