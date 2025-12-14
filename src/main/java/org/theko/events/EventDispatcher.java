@@ -1,53 +1,33 @@
 package org.theko.events;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
- * A comprehensive event dispatcher that manages event routing, listener registration,
- * and exception handling in an event-driven system.
+ * Central dispatcher for events, listeners, and consumers in an event-driven system.
  * <p>
- * The {@code EventDispatcher} is the central component responsible for:
+ * Responsible for:
  * <ul>
  *   <li>Registering and managing {@link Listener} instances and {@link EventConsumer}s</li>
- *   <li>Dispatching events to appropriate handlers based on event type and priority</li>
- *   <li>Managing execution order through {@link ListenerPriority} levels</li>
- *   <li>Providing robust exception handling through {@link EventExceptionHandler}s</li>
- *   <li>Supporting event consumption to prevent further processing</li>
+ *   <li>Dispatching events based on type and priority ({@link ListenerPriority})</li>
+ *   <li>Routing exceptions to {@link EventExceptionHandler}s</li>
+ *   <li>Supporting event consumption to stop further processing</li>
  * </ul>
+ *
+ * <p><strong>This class is thread-safe, and dispatching events executes on a caller thread</strong> 
+ *
+ * @param <E> event type, extends {@link Event}
+ * @param <L> listener type, extends {@link Listener}
+ * @param <T> classification type for event routing
  * 
- *
- * <p>
- * <strong>Event Processing Flow:</strong>
- * <ol>
- *   <li>Events are dispatched via {@link #dispatch(Object, Event)}</li>
- *   <li>The dispatcher looks up the appropriate {@link EventHandler} for the event type</li>
- *   <li>Listeners are processed in priority order (HIGHEST to LOW)</li>
- *   <li>Event consumers for the specific event type are processed in priority order</li>
- *   <li>If an event is consumed, further processing is stopped</li>
- *   <li>Exceptions are routed to registered exception handlers</li>
- * </ol>
- * 
- *
- * <p>
- * <strong>Thread Safety:</strong> This class is not thread-safe by default. Concurrent
- * access requires external synchronization. Consider using {@code synchronized} blocks
- * or concurrent collections if used in multi-threaded environments.
- * 
- *
- * @param <E> the type of event being dispatched, must extend {@link Event}
- * @param <L> the type of listener that can receive events, must extend {@link Listener}
- * @param <T> the classification type used for event routing and mapping
- *
  * @author Theko
  * @since 1.0
  * @see Event
@@ -59,41 +39,23 @@ import java.util.stream.Collectors;
  */
 public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
 
-    /**
-     * Registry of listeners grouped by their priority level.
-     * Listeners with higher priority are processed first.
-     */
-    private final Map<ListenerPriority, List<L>> listeners = new EnumMap<>(ListenerPriority.class);
-    
-    /**
-     * Registry of event consumers grouped by their priority level.
-     * Consumers are wrapped to associate them with their event type.
-     */
-    private final Map<ListenerPriority, List<EventConsumerWrapper>> consumers = new EnumMap<>(ListenerPriority.class);
-    
-    /**
-     * Mapping from original event consumers to their wrapper instances
-     * for efficient removal and lookup operations.
-     */
-    private final Map<EventConsumer<E>, EventConsumerWrapper> consumerWrappers = new HashMap<>();
+    /** Listeners grouped by priority (HIGHEST → LOW). */
+    private final Map<ListenerPriority, List<L>> listeners = new ConcurrentHashMap<>();
 
-    /**
-     * Manager instance that provides simplified access to listener management operations
-     * for this dispatcher. Created automatically and shared for the lifetime of the dispatcher.
-     */
+    /** Event consumers grouped by priority, wrapped for event type association. */
+    private final Map<ListenerPriority, List<EventConsumerWrapper>> consumers = new ConcurrentHashMap<>();
+
+    /** Lookup map from original consumer to wrapper, for efficient removal. */
+    private final Map<EventConsumer<E>, EventConsumerWrapper> consumerWrappers = new ConcurrentHashMap<>();
+
+    /** Simplified access to listener management operations for this dispatcher. */
     private final ListenersManager<E, L, T> listenersManager = new ListenersManager<>(this);
-    
-    /**
-     * Mapping from event types to their corresponding event handlers.
-     * Defines how events of specific types should be delivered to listeners.
-     */
-    private final Map<T, EventHandler<L, E>> eventMap = new HashMap<>();
-    
-    /**
-     * Registry of exception handlers for processing errors that occur
-     * during event dispatch to listeners or consumers.
-     */
-    private final List<ExceptionHandlerWrapper<?>> exceptionHandlers = new ArrayList<>();
+
+    /** Mapping from event types to their corresponding handlers. */
+    private final Map<T, EventHandler<L, E>> eventMap = new ConcurrentHashMap<>();
+
+    /** Registered exception handlers in registration order (last registered = first called). */
+    private final List<ExceptionHandlerWrapper<?>> exceptionHandlers = new CopyOnWriteArrayList<>();
 
     /**
      * Internal wrapper class that associates an {@link EventConsumer} with its
@@ -197,7 +159,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * This method completely replaces the existing event handler mappings with
      * the provided map. Existing mappings are cleared before adding the new ones.
      * 
-     *
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
      */
@@ -222,7 +183,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * Listeners with higher priority will receive events before listeners with lower priority.
      * Multiple listeners with the same priority are processed in registration order.
      * 
-     *
      * @param priority the priority level for the listener
      * @param listener the listener to register, must not be {@code null}
      * @throws NullPointerException if the listener or priority is {@code null}
@@ -248,7 +208,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * Event consumers provide a functional alternative to full listener implementations
      * for simpler event handling scenarios.
      * 
-     *
      * @param priority the priority level for the consumer
      * @param eventType the specific event type this consumer handles, must not be {@code null}
      * @param consumer the event consumer to register, must not be {@code null}
@@ -327,7 +286,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * <p>
      * The returned list is unmodifiable and reflects the current state of registered listeners.
      * 
-     *
      * @return an unmodifiable list of all registered listeners
      */
     public List<L> getListeners() {
@@ -342,7 +300,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * <p>
      * The returned list is unmodifiable and reflects the current state of registered consumers.
      * 
-     *
      * @return an unmodifiable list of all registered event consumers
      */
     public List<EventConsumer<E>> getConsumers() {
@@ -369,7 +326,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * with the new handler. Exception handlers are invoked in reverse registration order
      * (last registered, first called) until one successfully handles the exception.
      * 
-     *
      * @param <EX> the type of exception to handle
      * @param exceptionType the class object representing the exception type
      * @param handler the exception handler to register
@@ -385,16 +341,6 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
 
     /**
      * Dispatches an event to all registered listeners and consumers for the specified event type.
-     * <p>
-     * The dispatch process follows this sequence:
-     * <ol>
-     *   <li>Looks up the event handler for the specified event type</li>
-     *   <li>Processes all listeners in priority order (HIGHEST to LOW)</li>
-     *   <li>Processes all consumers for the specific event type in priority order</li>
-     *   <li>Stops processing if the event is consumed at any point</li>
-     *   <li>Routes any exceptions to registered exception handlers</li>
-     * </ol>
-     * 
      *
      * @param eventType the type classification of the event being dispatched
      * @param event the event instance to dispatch
