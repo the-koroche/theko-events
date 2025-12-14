@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  *   <li>Providing robust exception handling through {@link EventExceptionHandler}s</li>
  *   <li>Supporting event consumption to prevent further processing</li>
  * </ul>
- * </p>
+ * 
  *
  * <p>
  * <strong>Event Processing Flow:</strong>
@@ -36,17 +36,17 @@ import java.util.stream.Collectors;
  *   <li>If an event is consumed, further processing is stopped</li>
  *   <li>Exceptions are routed to registered exception handlers</li>
  * </ol>
- * </p>
+ * 
  *
  * <p>
  * <strong>Thread Safety:</strong> This class is not thread-safe by default. Concurrent
  * access requires external synchronization. Consider using {@code synchronized} blocks
  * or concurrent collections if used in multi-threaded environments.
- * </p>
+ * 
  *
- * @param E the type of event being dispatched, must extend {@link Event}
- * @param L the type of listener that can receive events, must extend {@link Listener}
- * @param T the classification type used for event routing and mapping
+ * @param <E> the type of event being dispatched, must extend {@link Event}
+ * @param <L> the type of listener that can receive events, must extend {@link Listener}
+ * @param <T> the classification type used for event routing and mapping
  *
  * @author Theko
  * @since 1.0
@@ -175,11 +175,28 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
     }
 
     /**
+     * Creates a new event dispatcher with the default exception handler.
+     */
+    public EventDispatcher() {
+        EventExceptionHandler<L,E,Throwable> defaultExceptionHandler = new EventExceptionHandler<L,E,Throwable>() {
+            @Override
+            public void handle(L listener, E event, Throwable exception) {
+                System.err.println("Unhandled exception in listener: " +
+                        (listener == null ? "null" : listener.getClass().getName()) +
+                        ", event: " + event.getClass().getName() + 
+                        ", exception: " + exception.getMessage());
+                exception.printStackTrace();
+            }
+        };
+        addExceptionHandler(Throwable.class, defaultExceptionHandler);
+    }
+
+    /**
      * Replaces the current event mapping with the specified map.
      * <p>
      * This method completely replaces the existing event handler mappings with
      * the provided map. Existing mappings are cleared before adding the new ones.
-     * </p>
+     * 
      *
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
@@ -204,7 +221,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * <p>
      * Listeners with higher priority will receive events before listeners with lower priority.
      * Multiple listeners with the same priority are processed in registration order.
-     * </p>
+     * 
      *
      * @param priority the priority level for the listener
      * @param listener the listener to register, must not be {@code null}
@@ -230,7 +247,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * <p>
      * Event consumers provide a functional alternative to full listener implementations
      * for simpler event handling scenarios.
-     * </p>
+     * 
      *
      * @param priority the priority level for the consumer
      * @param eventType the specific event type this consumer handles, must not be {@code null}
@@ -309,7 +326,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * Returns all registered listeners in registration order (not priority order).
      * <p>
      * The returned list is unmodifiable and reflects the current state of registered listeners.
-     * </p>
+     * 
      *
      * @return an unmodifiable list of all registered listeners
      */
@@ -324,7 +341,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * Returns all registered event consumers in registration order (not priority order).
      * <p>
      * The returned list is unmodifiable and reflects the current state of registered consumers.
-     * </p>
+     * 
      *
      * @return an unmodifiable list of all registered event consumers
      */
@@ -351,7 +368,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * If a handler already exists for the specified exception type, it is replaced
      * with the new handler. Exception handlers are invoked in reverse registration order
      * (last registered, first called) until one successfully handles the exception.
-     * </p>
+     * 
      *
      * @param <EX> the type of exception to handle
      * @param exceptionType the class object representing the exception type
@@ -377,7 +394,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      *   <li>Stops processing if the event is consumed at any point</li>
      *   <li>Routes any exceptions to registered exception handlers</li>
      * </ol>
-     * </p>
+     * 
      *
      * @param eventType the type classification of the event being dispatched
      * @param event the event instance to dispatch
