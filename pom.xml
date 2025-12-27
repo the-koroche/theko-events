@@ -4,13 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.theko.events</groupId>
+    <groupId>io.github.the-koroche</groupId>
     <artifactId>theko-events</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
     <packaging>jar</packaging>
 
     <name>Theko-Events</name>
     <description>An event system providing a library for event-driven architecture in Java applications.</description>
+    <url>https://github.com/the-koroche/theko-events</url>
 
     <licenses>
         <license>
@@ -32,24 +33,14 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/the-koroche/theko-event.git</connection>
-        <developerConnection>scm:git:ssh://github.com/the-koroche/theko-event.git</developerConnection>
+        <connection>scm:git:git://github.com/the-koroche/theko-events.git</connection>
+        <developerConnection>scm:git:ssh://github.com/the-koroche/theko-events.git</developerConnection>
         <url>https://github.com/the-koroche/theko-events</url>
     </scm>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
-
     <properties>
-        <java.version>14</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gpg.keyname>578AA2D3C148548E</gpg.keyname>
     </properties>
 
     <build>
@@ -73,7 +64,15 @@
                     <execution>
                         <id>sign-artifacts</id>
                         <phase>verify</phase>
-                        <goals><goal>sign</goal></goals>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -81,24 +80,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.8.0</version>
-                <configuration>
-                    <failOnError>false</failOnError>
-                </configuration>
                 <executions>
                     <execution>
-                        <id>generate-javadocs</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>javadoc</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>attach-javadocs</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
+                <configuration>
+                    <failOnError>true</failOnError>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -118,9 +111,17 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <release>${java.version}</release>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.9.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
         </plugins>
