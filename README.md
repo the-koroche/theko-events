@@ -17,7 +17,7 @@ It provides a comprehensive framework for event-driven architectures with suppor
 <dependency>
     <groupId>io.github.the-koroche</groupId>
     <artifactId>theko-events</artifactId>
-    <version>1.2</version>
+    <version>1.2.1</version>
 </dependency>
 ```
 
