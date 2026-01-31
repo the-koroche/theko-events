@@ -63,6 +63,11 @@ It provides a comprehensive framework for event-driven architectures with suppor
 
 - `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
 
+### ListenersManagerProvider
+
+- An interface for providing access to a `ListenersManager`.
+- Useful for classes that use `EventDispatcher` and need to expose their `ListenersManager` instance.
+
 ---
 
 ## Usage
