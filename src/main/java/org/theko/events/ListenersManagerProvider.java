@@ -25,14 +25,14 @@
 package org.theko.events;
 
 /**
- * Provides a way to obtain a {@link ListenersManager} instance.
+ * Provides a way to access a fully configured and ready-to-use
+ * {@link ListenersManager} instance.
+ *
  * <p>
- * Implementations of this interface should return a fully configured and
- * ready-to-use {@link ListenersManager} instance.
- * <p>
- * This interface is useful for injection of {@link ListenersManager} instances
- * into other classes or for providing a global {@link ListenersManager} instance
- * that can be accessed from anywhere in the application.
+ * Implementations of this interface must return a properly configured
+ * {@link ListenersManager}. This interface ensures that a method with
+ * the standardized name {@code getListenersManager()} exists to obtain
+ * the manager, avoiding inconsistent naming across classes.
  *
  * @param <E> the type of event being handled, must extend {@link Event}
  * @param <L> the type of listener being managed, must extend {@link Listener}
