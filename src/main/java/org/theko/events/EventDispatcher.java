@@ -24,9 +24,6 @@
 
 package org.theko.events;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +60,7 @@ import java.util.stream.Collectors;
  */
 public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
 
-    /** Listeners grouped by priority (HIGHEST → LOW). */
+    /** Listeners grouped by priority (CRITICAL → LOW). */
     private final Map<ListenerPriority, List<L>> listeners = new ConcurrentHashMap<>();
 
     /** Event consumers grouped by priority, wrapped for event type association. */
@@ -306,29 +303,37 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
     }
 
     /**
-     * Returns all registered listeners in registration order (not priority order).
+     * Returns all registered listeners in descending priority order.
      * <p>
-     * The returned list is unmodifiable and reflects the current state of registered listeners.
-     * 
-     * @return an unmodifiable list of all registered listeners
+     * The resulting list is unmodifiable and contains all listeners registered
+     * with the dispatcher, regardless of their priority. Listeners are returned
+     * in the order of their priority, with higher priority listeners appearing
+     * first.
+     *
+     * @return a list of all registered listeners, ordered by priority
      */
     public List<L> getListeners() {
-        return Arrays.stream(ListenerPriority.values())
-                .map(priority -> listeners.getOrDefault(priority, Collections.emptyList()))
-                .flatMap(List::stream)
-                .collect(Collectors.toUnmodifiableList());
+        return listeners.keySet().stream()
+            .sorted()
+            .map(listeners::get)
+            .flatMap(List::stream)
+            .collect(Collectors.toUnmodifiableList());
     }
 
     /**
-     * Returns all registered event consumers in registration order (not priority order).
+     * Returns all registered event consumers in descending priority order.
      * <p>
-     * The returned list is unmodifiable and reflects the current state of registered consumers.
-     * 
-     * @return an unmodifiable list of all registered event consumers
+     * The resulting list is unmodifiable and contains all event consumers registered
+     * with the dispatcher, regardless of their priority. Consumers are returned
+     * in the order of their priority, with higher priority consumers appearing
+     * first.
+     *
+     * @return a list of all registered event consumers, ordered by priority
      */
     public List<EventConsumer<E>> getConsumers() {
-        return Arrays.stream(ListenerPriority.values())
-                .map(priority -> consumers.getOrDefault(priority, Collections.emptyList()))
+        return consumers.keySet().stream()
+                .sorted()
+                .map(consumers::get)
                 .flatMap(List::stream)
                 .map(wrapper -> wrapper.consumer)
                 .collect(Collectors.toUnmodifiableList());
@@ -363,12 +368,24 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
         exceptionHandlers.add(new ExceptionHandlerWrapper<>(handler, exceptionType));
     }
 
+    
     /**
-     * Dispatches an event to all registered listeners and consumers for the specified event type.
-     *
-     * @param eventType the type classification of the event being dispatched
-     * @param event the event instance to dispatch
-     * @throws NullPointerException if either eventType or event is {@code null}
+     * Dispatches an event to all registered listeners and consumers.
+     * <p>
+     * Listeners are processed in priority order (highest first), and event consumers
+     * are processed after all listeners have been processed. If a listener
+     * calls {@link Event#consume()} on the event, no further listeners or consumers
+     * will be processed.
+     * <p>
+     * If any exceptions occur during event processing, they are routed to the
+     * appropriate registered exception handler in reverse registration order
+     * (last registered, first called) until one successfully handles the exception.
+     * <p>
+     * If no exception handler can handle the exception, it is re-thrown.
+     * 
+     * @param eventType the event type to dispatch, may be {@code null}
+     * @param event the event to dispatch, must not be {@code null}
+     * @throws NullPointerException if event is {@code null}
      */
     public void dispatch(T eventType, E event) {
         if (event == null) throw new NullPointerException("Event is null.");
@@ -417,11 +434,10 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * @return a list of listeners ordered by priority
      */
     private List<L> getListenersInPriorityOrder() {
-        return Arrays.stream(ListenerPriority.values())
-                .sorted(Comparator.naturalOrder())
-                .map(priority -> listeners.getOrDefault(priority, Collections.emptyList()))
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
+        return listeners.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .flatMap(entry -> entry.getValue().stream())
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -431,33 +447,42 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * @return a list of consumers for the specified event type, ordered by priority
      */
     private List<EventConsumerWrapper> getConsumersForEventType(T eventType) {
-        return Arrays.stream(ListenerPriority.values())
-                .sorted(Comparator.reverseOrder())
-                .map(priority -> consumers.getOrDefault(priority, Collections.emptyList()))
-                .flatMap(List::stream)
+        return consumers.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .flatMap(entry -> entry.getValue().stream())
                 .filter(wrapper -> wrapper.eventType.equals(eventType))
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
-     * Handles an exception that occurred during event processing by routing it
-     * to the appropriate registered exception handler.
-     *
-     * @param listener the listener that was processing the event, may be {@code null}
-     * @param event the event that was being processed
+     * Handles an exception thrown while processing an event.
+     * <p>
+     * Iterates through the list of registered exception handlers in reverse registration order
+     * (last registered, first called) until one successfully handles the exception.
+     * If no exception handler can handle the exception, the stack trace is printed.
+     * 
+     * @param listener the listener that was processing the event (may be {@code null})
+     * @param event the event being processed
      * @param exception the exception that occurred
      */
     private void handleException(L listener, E event, Throwable exception) {
+        boolean handled = false;
+
         for (ExceptionHandlerWrapper<?> wrapper : exceptionHandlers) {
             if (wrapper.canHandle(exception)) {
                 try {
                     wrapper.handle(listener, event, exception);
+                    handled = true;
                     break;
                 } catch (Throwable ex) {
                     System.err.println("Exception handler failed: " + ex.getMessage());
                     ex.printStackTrace();
                 }
             }
+        }
+
+        if (!handled) {
+            exception.printStackTrace();
         }
     }
 }
