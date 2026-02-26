@@ -30,16 +30,23 @@ package org.theko.events;
  * Implementations process dispatched events and may call {@link Event#consume()} 
  * to stop further handling.
  *
- * @param <E> event type
+ * @param <E> event type, extends {@link Event}
+ * @param <T> classification type for event routing
+ * 
+ * @see Event
+ * @see EventDispatcher
  *
  * @author Theko
  * @since 1.0
- * @see Event
- * @see EventDispatcher
  */
 @FunctionalInterface
-public interface EventConsumer<E extends Event> {
+public interface EventConsumer<E extends Event, T> {
 
-    /** Processes the given event. */
-    void consume(E event);
+    /**
+     * Processes the given event.
+     * 
+     * @param type event classification key, may be {@code null}
+     * @param event event instance
+     */
+    void consume(T type, E event);
 }
