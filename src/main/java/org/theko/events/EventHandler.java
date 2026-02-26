@@ -51,8 +51,9 @@ package org.theko.events;
  * <p><strong>Thread safety:</strong>
  * Implementations must be thread-safe if events are dispatched concurrently.
  *
- * @param <L> listener type
- * @param <E> event type
+ * @param <E> event type, extends {@link Event}
+ * @param <L> listener type, extends {@link Listener}
+ * @param <T> classification type for event routing
  * 
  * @see Event
  * @see EventDispatcher

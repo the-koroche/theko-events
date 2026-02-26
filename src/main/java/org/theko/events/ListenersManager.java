@@ -7,6 +7,23 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+/**
+ * Central manager for listeners and event consumers.
+ * <p>
+ * This class is responsible for registering, unregistering, and retrieving listeners
+ * and event consumers, as well as managing their priority levels.
+ * 
+ * @param <E> the type of event being handled, must extend {@link Event}
+ * @param <L> the type of listener being managed, must extend {@link Listener}
+ * @param <T> the classification type used for event routing
+ * 
+ * @see Listener
+ * @see EventConsumer
+ * @see ListenerPriority
+ * 
+ * @author Theko
+ * @since 2.0.0
+ */
 public class ListenersManager<E extends Event, L extends Listener<E>, T> {
 
     private static final ListenerPriority DEFAULT_PRIORITY = ListenerPriority.NORMAL;

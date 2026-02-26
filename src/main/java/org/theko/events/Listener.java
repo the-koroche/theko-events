@@ -31,7 +31,6 @@ package org.theko.events;
  * bound to event types using {@link EventMap}.
  *
  * @param <E> event type, extends {@link Event}
- * @param <T> event classification key type
  * 
  * @see Event
  * @see EventMap
