@@ -56,16 +56,17 @@ import java.util.HashMap;
  * @param <E> event type
  * @param <L> listener type
  * @param <T> event classification key type
- *
- * @author Theko
- * @since 1.0
+ * 
  * @see HashMap
  * @see EventHandler
  * @see EventDispatcher
  * @see Listener
  * @see Event
+ *
+ * @author Theko
+ * @since 1.0
  */
-public class EventMap<E extends Event, L extends Listener<E, T>, T> extends HashMap<T, EventHandler<L, E>> {
+public class EventMap<E extends Event, L extends Listener<E, T>, T> extends HashMap<T, EventHandler<E, L, T>> {
 
     /**
      * Creates a new empty event map.

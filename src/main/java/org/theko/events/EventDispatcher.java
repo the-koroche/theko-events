@@ -24,13 +24,10 @@
 
 package org.theko.events;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
 
 /**
  * Central dispatcher for events, listeners, and consumers in an event-driven system.
@@ -49,111 +46,71 @@ import java.util.stream.Collectors;
  * @param <L> listener type, extends {@link Listener}
  * @param <T> classification type for event routing
  * 
- * @author Theko
- * @since 1.0
  * @see Event
  * @see Listener
  * @see EventConsumer
  * @see EventHandler
  * @see EventExceptionHandler
  * @see ListenerPriority
+ * 
+ * @author Theko
+ * @since 1.0
  */
-public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
+public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> implements ListenersManageable<E, L, T> {
 
-    /** Listeners grouped by priority (CRITICAL → LOW). */
-    private final Map<ListenerPriority, List<L>> listeners = new ConcurrentHashMap<>();
+    private final EventExceptionHandler<E, L, T, Throwable> DEFAULT_EXCEPTION_HANDLER = new EventExceptionHandler<>() {
+        @Override
+        public void handle(L listener, E event, Throwable exception) {
+            boolean isConsumer = listener == null; // Consumer is anonymous type, so always null
 
-    /** Event consumers grouped by priority, wrapped for event type association. */
-    private final Map<ListenerPriority, List<EventConsumerWrapper>> consumers = new ConcurrentHashMap<>();
+            String message = "Unhandled exception in %s, event: %s, exception: %s";
+            String callerName = isConsumer ? "consumer" : listener.getClass().getSimpleName();
+            message = String.format(message, callerName, event.getClass().getSimpleName(), exception.getClass().getSimpleName());
 
-    /** Lookup map from original consumer to wrapper, for efficient removal. */
-    private final Map<EventConsumer<E>, EventConsumerWrapper> consumerWrappers = new ConcurrentHashMap<>();
+            System.err.println(message);
+            exception.printStackTrace(System.err);
+        }
+    };
+    
+    /* Listener management */
+    // Provides access to listener management operations for this dispatcher.
+    private final ListenersManager<E, L, T> listenersManager = new ListenersManager<>();
 
-    /** Simplified access to listener management operations for this dispatcher. */
-    private final ListenersManager<E, L, T> listenersManager = new ListenersManager<>(this);
+    /* Event dispatching */
+    // Mapping from event types to their corresponding handlers.
+    private final Map<T, EventHandler<E, L, T>> eventMap = new ConcurrentHashMap<>();
 
-    /** Mapping from event types to their corresponding handlers. */
-    private final Map<T, EventHandler<L, E>> eventMap = new ConcurrentHashMap<>();
-
-    /** Registered exception handlers in registration order (last registered = first called). */
+    // Registered exception handlers in registration order (last registered = first called).
     private final List<ExceptionHandlerWrapper<?>> exceptionHandlers = new CopyOnWriteArrayList<>();
-
-    /**
-     * Internal wrapper class that associates an {@link EventConsumer} with its
-     * specific event type for efficient filtering during event dispatch.
-     */
-    private class EventConsumerWrapper {
-        /** The wrapped event consumer instance */
-        final EventConsumer<E> consumer;
-        
-        /** The event type this consumer is registered for */
-        final T eventType;
-
-        /**
-         * Creates a new wrapper for the specified event consumer and type.
-         *
-         * @param consumer the event consumer to wrap
-         * @param eventType the event type this consumer handles
-         */
-        EventConsumerWrapper(EventConsumer<E> consumer, T eventType) {
-            this.consumer = consumer;
-            this.eventType = eventType;
-        }
-
-        /**
-         * Delegates event consumption to the wrapped consumer.
-         *
-         * @param event the event to consume
-         */
-        void consume(E event) {
-            consumer.consume(event);
-        }
-    }
 
     /**
      * Internal wrapper class that associates an {@link EventExceptionHandler}
      * with the specific exception type it can handle.
      *
-     * @param <EX> the type of exception this handler can process
+     * @param <X> the type of exception this handler can process
      */
-    private class ExceptionHandlerWrapper<EX extends Throwable> {
-        /** The wrapped exception handler instance */
-        final EventExceptionHandler<L, E, EX> handler;
-        
-        /** The exception type this handler can process */
-        final Class<EX> exceptionType;
+    private class ExceptionHandlerWrapper<X extends Throwable> {
 
-        /**
-         * Creates a new wrapper for the specified exception handler and type.
-         *
-         * @param handler the exception handler to wrap
-         * @param exceptionType the exception type this handler can process
-         */
-        ExceptionHandlerWrapper(EventExceptionHandler<L, E, EX> handler, Class<EX> exceptionType) {
+        // The wrapped exception handler instance
+        final EventExceptionHandler<E, L, T, X> handler;
+        
+        // The exception type this handler can process
+        final Class<X> exceptionType;
+
+        ExceptionHandlerWrapper(EventExceptionHandler<E, L, T, X> handler, Class<X> exceptionType) {
             this.handler = handler;
             this.exceptionType = exceptionType;
         }
 
-        /**
-         * Checks if this handler can process the given exception.
-         *
-         * @param exception the exception to check
-         * @return {@code true} if this handler can process the exception, {@code false} otherwise
-         */
+        // Checks if the given exception is of the type this handler can handle
         boolean canHandle(Throwable exception) {
             return exceptionType.isInstance(exception);
         }
 
-        /**
-         * Handles the exception using the wrapped handler with proper type casting.
-         *
-         * @param listener the listener that was processing the event, may be {@code null}
-         * @param event the event that was being processed
-         * @param exception the exception that occurred
-         */
+        // Handles the exception using the wrapped handler with proper type casting
         @SuppressWarnings("unchecked")
         void handle(L listener, E event, Throwable exception) {
-            handler.handle(listener, event, (EX) exception);
+            handler.handle(listener, event, (X) exception);
         }
     }
 
@@ -161,17 +118,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * Creates a new event dispatcher with the default exception handler.
      */
     public EventDispatcher() {
-        EventExceptionHandler<L,E,Throwable> defaultExceptionHandler = new EventExceptionHandler<L,E,Throwable>() {
-            @Override
-            public void handle(L listener, E event, Throwable exception) {
-                System.err.println("Unhandled exception in listener: " +
-                        (listener == null ? "null" : listener.getClass().getName()) +
-                        ", event: " + event.getClass().getName() + 
-                        ", exception: " + exception.getMessage());
-                exception.printStackTrace();
-            }
-        };
-        addExceptionHandler(Throwable.class, defaultExceptionHandler);
+        addExceptionHandler(Throwable.class, DEFAULT_EXCEPTION_HANDLER);
     }
 
     /**
@@ -183,7 +130,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
      */
-    public void setEventMap(Map<T, EventHandler<L, E>> map) {
+    public void setEventMap(Map<T, EventHandler<E, L, T>> map) {
         eventMap.clear();
         eventMap.putAll(map);
     }
@@ -199,151 +146,11 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
     }
 
     /**
-     * Registers a listener with the specified priority level.
-     * <p>
-     * Listeners with higher priority will receive events before listeners with lower priority.
-     * Multiple listeners with the same priority are processed in registration order.
-     * 
-     * @param priority the priority level for the listener
-     * @param listener the listener to register, must not be {@code null}
-     * @throws NullPointerException if the listener or priority is {@code null}
-     */
-    public void addListener(ListenerPriority priority, L listener) {
-        if (listener == null) throw new NullPointerException("Listener is null.");
-        listeners.computeIfAbsent(priority, k -> new LinkedList<>()).add(listener);
-    }
-
-    /**
-     * Registers a listener with {@link ListenerPriority#NORMAL} priority.
-     *
-     * @param listener the listener to register, must not be {@code null}
-     * @throws NullPointerException if the listener is {@code null}
-     */
-    public void addListener(L listener) {
-        addListener(ListenerPriority.NORMAL, listener);
-    }
-
-    /**
-     * Registers an event consumer with the specified priority level and event type.
-     * <p>
-     * Event consumers provide a functional alternative to full listener implementations
-     * for simpler event handling scenarios.
-     * 
-     * @param priority the priority level for the consumer
-     * @param eventType the specific event type this consumer handles, must not be {@code null}
-     * @param consumer the event consumer to register, must not be {@code null}
-     * @throws NullPointerException if either priority, eventTypem, or consumer is {@code null}
-     */
-    public void addConsumer(ListenerPriority priority, T eventType, EventConsumer<E> consumer) {
-        if (consumer == null) throw new NullPointerException("Consumer is null.");
-        if (eventType == null) throw new NullPointerException("Event type is null.");
-        EventConsumerWrapper wrapper = new EventConsumerWrapper(consumer, eventType);
-        consumerWrappers.put(consumer, wrapper);
-        consumers.computeIfAbsent(priority, k -> new LinkedList<>()).add(wrapper);
-    }
-
-    /**
-     * Registers an event consumer with {@link ListenerPriority#NORMAL} priority.
-     *
-     * @param eventType the specific event type this consumer handles, must not be {@code null}
-     * @param consumer the event consumer to register, must not be {@code null}
-     * @throws NullPointerException if either eventType or consumer is {@code null}
-     */
-    public void addConsumer(T eventType, EventConsumer<E> consumer) {
-        addConsumer(ListenerPriority.NORMAL, eventType, consumer);
-    }
-
-    /**
-     * Removes a listener from all priority levels.
-     *
-     * @param listener the listener to remove
-     * @return {@code true} if the listener was found and removed, {@code false} otherwise
-     */
-    public boolean removeListener(L listener) {
-        return listeners.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.remove(listener));
-    }
-
-    /**
-     * Removes an event consumer from all priority levels.
-     *
-     * @param consumer the event consumer to remove
-     * @return {@code true} if the consumer was found and removed, {@code false} otherwise
-     */
-    public boolean removeConsumer(EventConsumer<E> consumer) {
-        EventConsumerWrapper wrapper = consumerWrappers.remove(consumer);
-        if (wrapper == null) return false;
-        
-        return consumers.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.remove(wrapper));
-    }
-
-    /**
-     * Checks if a listener is currently registered.
-     *
-     * @param listener the listener to check
-     * @return {@code true} if the listener is registered, {@code false} otherwise
-     */
-    public boolean hasListener(L listener) {
-        return listeners.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.contains(listener));
-    }
-
-    /**
-     * Checks if an event consumer is currently registered.
-     *
-     * @param consumer the event consumer to check
-     * @return {@code true} if the consumer is registered, {@code false} otherwise
-     */
-    public boolean hasConsumer(EventConsumer<E> consumer) {
-        return consumerWrappers.containsKey(consumer);
-    }
-
-    /**
-     * Returns all registered listeners in descending priority order.
-     * <p>
-     * The resulting list is unmodifiable and contains all listeners registered
-     * with the dispatcher, regardless of their priority. Listeners are returned
-     * in the order of their priority, with higher priority listeners appearing
-     * first.
-     *
-     * @return a list of all registered listeners, ordered by priority
-     */
-    public List<L> getListeners() {
-        return listeners.keySet().stream()
-            .sorted()
-            .map(listeners::get)
-            .flatMap(List::stream)
-            .collect(Collectors.toUnmodifiableList());
-    }
-
-    /**
-     * Returns all registered event consumers in descending priority order.
-     * <p>
-     * The resulting list is unmodifiable and contains all event consumers registered
-     * with the dispatcher, regardless of their priority. Consumers are returned
-     * in the order of their priority, with higher priority consumers appearing
-     * first.
-     *
-     * @return a list of all registered event consumers, ordered by priority
-     */
-    public List<EventConsumer<E>> getConsumers() {
-        return consumers.keySet().stream()
-                .sorted()
-                .map(consumers::get)
-                .flatMap(List::stream)
-                .map(wrapper -> wrapper.consumer)
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    /**
      * Returns the listener manager for this dispatcher.
      * 
      * @return the listener manager instance, never null
      */
+    @Override
     public ListenersManager<E, L, T> getListenersManager() {
         return listenersManager;
     }
@@ -355,50 +162,42 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
      * with the new handler. Exception handlers are invoked in reverse registration order
      * (last registered, first called) until one successfully handles the exception.
      * 
-     * @param <EX> the type of exception to handle
+     * @param <X> the type of exception to handle
      * @param exceptionType the class object representing the exception type
      * @param handler the exception handler to register
      * @throws NullPointerException if either exceptionType or handler is {@code null}
      */
-    public <EX extends Throwable> void addExceptionHandler(
-            Class<EX> exceptionType, 
-            EventExceptionHandler<L, E, EX> handler) {
+    public <X extends Throwable> void addExceptionHandler(
+            Class<X> exceptionType, 
+            EventExceptionHandler<E, L, T, X> handler) {
         
         exceptionHandlers.removeIf(wrapper -> wrapper.exceptionType.equals(exceptionType));
         exceptionHandlers.add(new ExceptionHandlerWrapper<>(handler, exceptionType));
     }
 
-    
     /**
      * Dispatches an event to all registered listeners and consumers.
      * <p>
-     * Listeners are processed in priority order (highest first), and event consumers
-     * are processed after all listeners have been processed. If a listener
-     * calls {@link Event#consume()} on the event, no further listeners or consumers
-     * will be processed.
+     * Listeners are processed in priority order, and event consumption is respected.
+     * If an exception is thrown during event processing, it is routed to the associated exception handler.
+     * If no exception handler is registered for the exception type, the stack trace is printed.
      * <p>
-     * If any exceptions occur during event processing, they are routed to the
-     * appropriate registered exception handler in reverse registration order
-     * (last registered, first called) until one successfully handles the exception.
-     * <p>
-     * If no exception handler can handle the exception, it is re-thrown.
+     * If eventType is null, then only consumers are processed.
      * 
-     * @param eventType the event type to dispatch, may be {@code null}
-     * @param event the event to dispatch, must not be {@code null}
-     * @throws NullPointerException if event is {@code null}
+     * @param eventType the event classification key to filter consumers by, or null for no filtering
+     * @param event the event to dispatch
+     * 
+     * @throws NullPointerException if event is null
      */
     public void dispatch(T eventType, E event) {
         if (event == null) throw new NullPointerException("Event is null.");
-        EventHandler<L, E> handler = (eventType == null) ? null : eventMap.get(eventType);
+        EventHandler<E, L, T> handler = (eventType == null) ? null : eventMap.get(eventType);
 
         // Process listeners in priority order
-        for (L listener : getListenersInPriorityOrder()) {
-            if (event.isConsumed()) break;
+        for (L listener : listenersManager.getListeners()) {
+            if (handler == null || event.isConsumed()) break;
             if (listener == null) continue;
             try {
-                listener.onEvent(eventType, event);
-
-                if (handler == null) continue;
                 handler.handle(listener, event);
             } catch (Throwable ex) {
                 handleException(listener, event, ex);
@@ -406,64 +205,23 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
         }
 
         // Process consumers for the specific event type
-        for (EventConsumerWrapper wrapper : getConsumersForEventType(eventType)) {
+        for (EventConsumer<E, T> consumer : listenersManager.getConsumers(eventType)) {
             try {
                 if (event.isConsumed()) break;
-                if (wrapper == null) continue;
-                wrapper.consume(event);
+                if (consumer == null) continue;
+                consumer.consume(eventType, event);
             } catch (Throwable ex) {
                 handleException(null, event, ex);
             }
         }
     }
-    
-    /**
-     * Convenience method for dispatching an event without specifying an event type.
-     * Equivalent to calling {@link #dispatch(Object, Event)} with the first argument being {@code null}.
-     * 
-     * @param event the event instance to dispatch
-     * @throws NullPointerException if event is {@code null}
-     */
-    public void dispatch(E event) {
-        dispatch(null, event);
-    }
 
-    /**
-     * Returns all listeners in descending priority order (HIGHEST first).
-     *
-     * @return a list of listeners ordered by priority
-     */
-    private List<L> getListenersInPriorityOrder() {
-        return listeners.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .flatMap(entry -> entry.getValue().stream())
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    /**
-     * Returns all consumers for a specific event type in descending priority order.
-     *
-     * @param eventType the event type to filter consumers by
-     * @return a list of consumers for the specified event type, ordered by priority
-     */
-    private List<EventConsumerWrapper> getConsumersForEventType(T eventType) {
-        return consumers.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .flatMap(entry -> entry.getValue().stream())
-                .filter(wrapper -> wrapper.eventType.equals(eventType))
-                .collect(Collectors.toUnmodifiableList());
-    }
-
-    /**
+    /*
      * Handles an exception thrown while processing an event.
-     * <p>
+     *
      * Iterates through the list of registered exception handlers in reverse registration order
      * (last registered, first called) until one successfully handles the exception.
      * If no exception handler can handle the exception, the stack trace is printed.
-     * 
-     * @param listener the listener that was processing the event (may be {@code null})
-     * @param event the event being processed
-     * @param exception the exception that occurred
      */
     private void handleException(L listener, E event, Throwable exception) {
         boolean handled = false;
@@ -482,7 +240,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> {
         }
 
         if (!handled) {
-            exception.printStackTrace();
+            exception.printStackTrace(System.err);
         }
     }
 }

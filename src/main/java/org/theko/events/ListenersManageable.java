@@ -1,42 +1,70 @@
+/*
+ * MIT License
+ * 
+ * Copyright (c) 2025 Alex Soloviov (aka Theko)
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package org.theko.events;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
-public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
+/**
+ * An interface for classes that expose a {@link ListenersManager} instance.
+ * Provides a way to manage listeners and event consumers for a class.
+ * <p>
+ * Example:
+ * <pre>{@code
+ * class MyClass implements ListenersManageable<MyEvent, MyListener, String> {
+ *     private final EventDispatcher<MyEvent, MyListener, String> dispatcher = new EventDispatcher();
+ * 
+ *     @Override
+ *     public ListenersManager<MyEvent, MyListener, String> getListenersManager() {
+ *         return new ListenersManager<>(dispatcher);
+ *     }
+ * }
+ * 
+ * MyClass myClass = new MyClass();
+ * // Now MyClass can automatically manage listeners:
+ * myClass.addListener(listener);
+ * }</pre>
+ *
+ * @param <E> the type of event being handled, must extend {@link Event}
+ * @param <L> the type of listener being managed, must extend {@link Listener}
+ * @param <T> the classification type used for event routing
+ * 
+ * @see ListenersManager
+ * @see Listener
+ * @see EventDispatcher
+ *
+ * @author Theko
+ * @since 2.0.0
+ */
+public interface ListenersManageable<E extends Event, L extends Listener<E, T>, T> {
 
-    private static final ListenerPriority DEFAULT_PRIORITY = ListenerPriority.NORMAL;
-
-    // Listeners grouped by priority (CRITICAL to LOW).
-    private final Map<ListenerPriority, List<L>> listeners = new ConcurrentHashMap<>();
-
-    // Event consumers grouped by priority, wrapped for event type association.
-    private final Map<ListenerPriority, List<EventConsumerWrapper>> consumers = new ConcurrentHashMap<>();
-
-    // Lookup map from original consumer to wrapper, for efficient removal.
-    private final Map<EventConsumer<E, T>, EventConsumerWrapper> consumerWrappers = new ConcurrentHashMap<>();
-    
-    /*
-     * Internal wrapper class that associates an {@link EventConsumer} with its
-     * specific event type.
+    /**
+     * Returns the {@link ListenersManager} instance.
+     *
+     * @return the listeners manager instance
      */
-    private class EventConsumerWrapper {
-
-        // The wrapped event consumer instance
-        final EventConsumer<E, T> consumer;
-        
-        // The event type this consumer is registered for
-        final T eventType;
-
-        EventConsumerWrapper(EventConsumer<E, T> consumer, T eventType) {
-            this.consumer = consumer;
-            this.eventType = eventType;
-        }
-    }
+    ListenersManager<E, L, T> getListenersManager();
 
     /**
      * Registers a listener with the specified priority level.
@@ -48,9 +76,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param listener the listener to register, must not be {@code null}
      * @throws NullPointerException if the listener or priority is {@code null}
      */
-    public void addListener(ListenerPriority priority, L listener) {
-        if (listener == null) throw new NullPointerException("Listener is null.");
-        listeners.computeIfAbsent(priority, k -> new LinkedList<>()).add(listener);
+    default void addListener(ListenerPriority priority, L listener) {
+        getListenersManager().addListener(priority, listener);
     }
 
     /**
@@ -59,8 +86,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param listener the listener to register, must not be {@code null}
      * @throws NullPointerException if the listener is {@code null}
      */
-    public void addListener(L listener) {
-        addListener(DEFAULT_PRIORITY, listener);
+    default void addListener(L listener) {
+        getListenersManager().addListener(listener);
     }
 
     /**
@@ -69,10 +96,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param listener the listener to check
      * @return {@code true} if the listener is registered, {@code false} otherwise
      */
-    public boolean hasListener(L listener) {
-        return listeners.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.contains(listener));
+    default boolean hasListener(L listener) {
+        return getListenersManager().hasListener(listener);
     }
 
     /**
@@ -81,10 +106,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param listener the listener to remove
      * @return {@code true} if the listener was found and removed, {@code false} otherwise
      */
-    public boolean removeListener(L listener) {
-        return listeners.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.remove(listener));
+    default boolean removeListener(L listener) {
+        return getListenersManager().removeListener(listener);
     }
 
     /**
@@ -94,11 +117,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * 
      * @return a sorted list of all registered listeners
      */
-    public List<L> getListeners() {
-        return listeners.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .flatMap(entry -> entry.getValue().stream())
-                .collect(Collectors.toUnmodifiableList());
+    default List<L> getListeners() {
+        return getListenersManager().getListeners();
     }
 
     /**
@@ -112,11 +132,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if either priority, eventTypem, or consumer is {@code null}
      */
-    public void addConsumer(ListenerPriority priority, T eventType, EventConsumer<E, T> consumer) {
-        if (consumer == null) throw new NullPointerException("Consumer is null.");
-        EventConsumerWrapper wrapper = new EventConsumerWrapper(consumer, eventType);
-        consumerWrappers.put(consumer, wrapper);
-        consumers.computeIfAbsent(priority, k -> new LinkedList<>()).add(wrapper);
+    default void addConsumer(ListenerPriority priority, T eventType, EventConsumer<E, T> consumer) {
+        getListenersManager().addConsumer(priority, eventType, consumer);
     }
 
     /**
@@ -128,8 +145,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if either priority or consumer is {@code null}
      */
-    public void addConsumer(ListenerPriority priority, EventConsumer<E, T> consumer) {
-        addConsumer(priority, null, consumer);
+    default void addConsumer(ListenerPriority priority, EventConsumer<E, T> consumer) {
+        getListenersManager().addConsumer(priority, consumer);
     }
 
     /**
@@ -139,8 +156,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if either eventType or consumer is {@code null}
      */
-    public void addConsumer(T eventType, EventConsumer<E, T> consumer) {
-        addConsumer(DEFAULT_PRIORITY, eventType, consumer);
+    default void addConsumer(T eventType, EventConsumer<E, T> consumer) {
+        getListenersManager().addConsumer(eventType, consumer);
     }
 
     /**
@@ -151,8 +168,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if consumer is {@code null}
      */
-    public void addConsumer(EventConsumer<E, T> consumer) {
-        addConsumer((T) null, consumer);
+    default void addConsumer(EventConsumer<E, T> consumer) {
+        getListenersManager().addConsumer(consumer);
     }
 
     /**
@@ -161,8 +178,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to check
      * @return {@code true} if the consumer is registered, {@code false} otherwise
      */
-    public boolean hasConsumer(EventConsumer<E, T> consumer) {
-        return consumerWrappers.containsKey(consumer);
+    default boolean hasConsumer(EventConsumer<E, T> consumer) {
+        return getListenersManager().hasConsumer(consumer);
     }
 
     /**
@@ -171,13 +188,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param consumer the event consumer to remove
      * @return {@code true} if the consumer was found and removed, {@code false} otherwise
      */
-    public boolean removeConsumer(EventConsumer<E, T> consumer) {
-        EventConsumerWrapper wrapper = consumerWrappers.remove(consumer);
-        if (wrapper == null) return false;
-        
-        return consumers.values().stream()
-                .filter(Objects::nonNull)
-                .anyMatch(list -> list.remove(wrapper));
+    default boolean removeConsumer(EventConsumer<E, T> consumer) {
+        return getListenersManager().removeConsumer(consumer);
     }
 
     /**
@@ -187,13 +199,8 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * 
      * @return a sorted list of all registered event consumers
      */
-    public List<EventConsumer<E, T>> getConsumers() {
-        return consumers.keySet().stream()
-                .sorted()
-                .map(consumers::get)
-                .flatMap(List::stream)
-                .map(wrapper -> wrapper.consumer)
-                .collect(Collectors.toUnmodifiableList());
+    default List<EventConsumer<E, T>> getConsumers() {
+        return getListenersManager().getConsumers();
     }
 
     /**
@@ -205,13 +212,7 @@ public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
      * @param eventType the event type to filter by
      * @return a sorted list of all registered event consumers that match the given event type
      */
-    public List<EventConsumer<E, T>> getConsumers(T eventType) {
-        if (eventType == null) return getConsumers();
-        return consumers.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .flatMap(entry -> entry.getValue().stream())
-                .filter(wrapper -> Objects.equals(wrapper.eventType, eventType) || wrapper.eventType == null)
-                .map(wrapper -> wrapper.consumer)
-                .collect(Collectors.toUnmodifiableList());
+    default List<EventConsumer<E, T>> getConsumers(T eventType) {
+        return getListenersManager().getConsumers(eventType);
     }
 }

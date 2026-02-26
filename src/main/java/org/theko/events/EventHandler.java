@@ -53,15 +53,16 @@ package org.theko.events;
  *
  * @param <L> listener type
  * @param <E> event type
- *
- * @author Theko
- * @since 1.0
+ * 
  * @see Event
  * @see EventDispatcher
  * @see EventMap
+ *
+ * @author Theko
+ * @since 1.0
  */
 @FunctionalInterface
-public interface EventHandler<L, E extends Event> {
+public interface EventHandler<E extends Event, L extends Listener<E, T>, T> {
     
     /**
      * Handles the given event for the specified listener.
