@@ -38,6 +38,10 @@ package org.theko.events;
  * {@link #CRITICAL}, {@link #HIGH}, {@link #NORMAL}, {@link #LOW}, {@link #LOWEST}.
  * Custom priorities can also be created with any non-negative integer value.
  * 
+ * @see Comparable
+ * @see Listener
+ * @see EventDispatcher
+ * 
  * @author Theko
  * @since 1.0
  */
