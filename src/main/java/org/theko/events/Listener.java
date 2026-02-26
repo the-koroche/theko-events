@@ -41,5 +41,5 @@ package org.theko.events;
  * @author Theko
  * @since 1.0
  */
-public interface Listener<E extends Event, T> {
+public interface Listener<E extends Event> {
 }

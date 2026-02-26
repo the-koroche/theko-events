@@ -56,7 +56,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author Theko
  * @since 1.0
  */
-public class EventDispatcher<E extends Event, L extends Listener<E, T>, T> implements ListenersManageable<E, L, T> {
+public class EventDispatcher<E extends Event, L extends Listener<E>, T> implements ListenersManageable<E, L, T> {
 
     private final EventExceptionHandler<E, L, T, Throwable> DEFAULT_EXCEPTION_HANDLER = new EventExceptionHandler<>() {
         @Override

@@ -62,7 +62,7 @@ package org.theko.events;
  * @since 1.0
  */
 @FunctionalInterface
-public interface EventHandler<E extends Event, L extends Listener<E, T>, T> {
+public interface EventHandler<E extends Event, L extends Listener<E>, T> {
     
     /**
      * Handles the given event for the specified listener.

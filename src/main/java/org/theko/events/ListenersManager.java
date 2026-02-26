@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class ListenersManager<E extends Event, L extends Listener<E, T>, T> {
+public class ListenersManager<E extends Event, L extends Listener<E>, T> {
 
     private static final ListenerPriority DEFAULT_PRIORITY = ListenerPriority.NORMAL;
 

@@ -41,7 +41,7 @@ package org.theko.events;
  * @since 1.0
  */
 @FunctionalInterface
-public interface EventExceptionHandler<E extends Event, L extends Listener<E, T>, T, X extends Throwable> {
+public interface EventExceptionHandler<E extends Event, L extends Listener<E>, T, X extends Throwable> {
     
     /**
      * Handles an exception thrown while processing an event.

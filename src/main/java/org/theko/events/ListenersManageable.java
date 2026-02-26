@@ -57,7 +57,7 @@ import java.util.List;
  * @author Theko
  * @since 2.0.0
  */
-public interface ListenersManageable<E extends Event, L extends Listener<E, T>, T> {
+public interface ListenersManageable<E extends Event, L extends Listener<E>, T> {
 
     /**
      * Returns the {@link ListenersManager} instance.
