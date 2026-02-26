@@ -17,13 +17,20 @@ It provides a comprehensive framework for event-driven architectures with suppor
 <dependency>
     <groupId>io.github.the-koroche</groupId>
     <artifactId>theko-events</artifactId>
-    <version>1.2.4</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko-events/releases)
 
 ## Features
+
+### Default generic types
+
+- `E` represents the event type, extends `Event`.
+- `L` represents the listener type, extends `Listener<E>`.
+- `T` represents the event classification type.
+- `X` represents the exception type, extends `Throwable`.
 
 ### Events
 
@@ -33,9 +40,15 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 
 ### Listeners
 
-- Implement the `Listener<E, T>` interface to handle events of type `E` with classification `T`.
-- Listeners can have priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`.
+- Implement the `Listener<E>` interface to handle events of type `E` with classification `T`.
+- Listeners can have priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST` using the `ListenerPriority` class.
 - Can be registered through `EventDispatcher` or `ListenersManager`.
+
+### Listener Priority 
+
+- `ListenerPriority` provides constants for listener priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST`.
+- Supports custom priorities using the `ListenerPriority(int)` constructor.
+- Lower priorities are executed first.
 
 ### Consumers
 
@@ -44,11 +57,22 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 
 ### Event Dispatcher
 
-- `EventDispatcher<E, L, T>` is the central component that manages listeners, consumers, and event routing.
-- Supports listener and consumer priority order.
+- `EventDispatcher<E, L, T>` is the central component that responsible for event dispatching and event routing.
 - Dispatches events to all appropriate listeners and consumers.
 - Exception handling via `EventExceptionHandler<L, E, T>`.
 - Thread-safe when using concurrent collections.
+
+### Listeners Manager
+
+- `ListenersManager<E, L, T>` is the main class for managing listeners and consumers.
+- Controls adding and removing listeners and consumers.
+- Sorts listeners and consumers by priority and event type.
+- Thread-safe when using concurrent collections.
+
+### Listeners Manageable
+
+- An interface for classes that can provide access to a `ListenersManager`.
+- Automatically adds listeners and consumers managing to the `ListenersManager` when implemented.
 
 ### Event Exception Handling
 
@@ -56,19 +80,9 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 - Supports chaining via `andThen()` method.
 - Default handler prints stack traces of unhandled exceptions.
 
-### ListenersManager
-
-- Provides a simplified API to manage listeners and consumers.
-- Delegates operations to an underlying `EventDispatcher`.
-
 ### Event Maps
 
 - `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
-
-### ListenersManagerProvider
-
-- An interface for providing access to a `ListenersManager`.
-- Useful for classes that use `EventDispatcher` and need to expose their `ListenersManager` instance.
 
 ---
 
@@ -90,13 +104,13 @@ dispatcher.dispatch("eventType", event);
 
 ```java
 dispatcher.addListener(new MyListener()); // with normal priority
-dispatcher.addListener(ListenerPriority.HIGH, new MyListener());
+dispatcher.addListener(ListenerPriority.HIGH, new MyListener()); // with high priority
 ```
 
 ### Using event consumers
 
 ```java
-dispatcher.addConsumer("eventType", e -> {
+dispatcher.addConsumer("eventType", (type, e) -> {
     System.out.println("Event consumed: " + e);
 });
 ```
@@ -113,27 +127,34 @@ dispatcher.addExceptionHandler(MyException.class, (listener, event, ex) -> {
 ```java
 import org.theko.events.Event;
 import org.theko.events.EventDispatcher;
+import org.theko.events.EventMap;
 import org.theko.events.Listener;
 
 class MyEvent extends Event {
-    boolean success;
+    private final String message;
 
-    MyEvent(boolean success) {
-        this.success = success;
-    }
+    public MyEvent(String message) { this.message = message; }
+    public MyEvent() { this(null); }
 
-    boolean isSuccessful() {
-        return success;
-    }
+    public boolean hasMessage() { return message != null; }
+    public String getMessage() { return message; }
 }
 
-class MyListener implements Listener<MyEvent, String> {
+interface MyListener extends Listener<MyEvent> {
+    default void onOpened(MyEvent event) { }
+    default void onClosed(MyEvent event) { }
+    default void onMessage(MyEvent event) { }
+}
+
+class MyListenerImpl implements MyListener {
     @Override
-    public void onEvent(String type, MyEvent event) {
-        if (event.isSuccessful()) {
-            System.out.println("Event successful!");
-        } else {
-            System.err.println("Event failed!");
+    public void onOpened(MyEvent event) { System.out.println("Opened"); }
+    @Override
+    public void onClosed(MyEvent event) { System.out.println("Closed"); }
+    @Override
+    public void onMessage(MyEvent event) {
+        if (event.hasMessage()) {
+            System.out.println("Event has message");
         }
     }
 }
@@ -141,8 +162,23 @@ class MyListener implements Listener<MyEvent, String> {
 public class Main {
     public static void main(String[] args) {
         EventDispatcher<MyEvent, MyListener, String> dispatcher = new EventDispatcher<>();
-        dispatcher.addListener(new MyListener());
-        dispatcher.dispatch(new MyEvent(true)); // dispatch event
+        EventMap<MyEvent, MyListener, String> map = new EventMap<>();
+        map.put("open", MyListener::onOpened);
+        map.put("close", MyListener::onClosed);
+        map.put("message", MyListener::onMessage);
+        dispatcher.setEventMap(map);
+
+        // Listeners are processed first, then consumers
+        dispatcher.addListener(new MyListenerImpl());
+        dispatcher.addConsumer("message", (type, event) -> {
+            if (event.hasMessage()) {
+                System.out.println("Message: " + event.getMessage());
+            }
+        });
+
+        dispatcher.dispatch("open", new MyEvent());
+        dispatcher.dispatch("message", new MyEvent("Hello world!"));
+        dispatcher.dispatch("close", new MyEvent());
     }
 }
 ```
@@ -166,13 +202,14 @@ public class Main {
 ## Modules / Classes
 
 * `Event` – Base class for all events
-* `Listener<E, T>` – Generic listener interface
-* `ListenerPriority` – Enum defining listener execution priority
+* `Listener<E>` – Generic listener interface
+* `ListenerPriority` – Class defining listener execution priority
+* `ListenersManager<E, L, T>` – Manages listener and consumer registration
+* `ListenersManageable<E, L, T>` – Interface for classes that can provide access to a `ListenersManager`
 * `EventConsumer<E>` – Functional interface for event consumers
 * `EventDispatcher<E, L, T>` – Main event dispatching system
-* `EventExceptionHandler<L, E, T>` – Handles exceptions during event processing
-* `ListenersManager<E, L, T>` – Simplifies listener and consumer management
-* `EventMap<E, L, T>` – Optional mapping for routing events
+* `EventMap<E, L, T>` – Listener mapping for routing events
+* `EventExceptionHandler<L, E, T>` – Handles exceptions during event processing in listeners, consumers
 
 ---
 
