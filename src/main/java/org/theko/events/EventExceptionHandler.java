@@ -28,18 +28,20 @@ package org.theko.events;
  * Handles exceptions thrown during event processing.
  * Supports handler chaining via {@link #andThen(EventExceptionHandler)}.
  *
- * @param <L> listener type
- * @param <E> event type
- * @param <T> exception type
- *
- * @author Theko
- * @since 1.0
+ * @param <E> event type, extends {@link Event}
+ * @param <L> listener type, extends {@link Listener}
+ * @param <T> classification type for event routing
+ * @param <X> exception type to handle
+ * 
  * @see EventHandler
  * @see Event
  * @see Listener
+ *
+ * @author Theko
+ * @since 1.0
  */
 @FunctionalInterface
-public interface EventExceptionHandler<L, E extends Event, T extends Throwable> {
+public interface EventExceptionHandler<E extends Event, L extends Listener<E, T>, T, X extends Throwable> {
     
     /**
      * Handles an exception thrown while processing an event.
@@ -48,7 +50,7 @@ public interface EventExceptionHandler<L, E extends Event, T extends Throwable> 
      * @param event event being processed
      * @param exception thrown exception
      */
-    void handle(L listener, E event, T exception);
+    void handle(L listener, E event, X exception);
 
     /**
      * Returns a composed handler that executes this handler first,
@@ -57,7 +59,7 @@ public interface EventExceptionHandler<L, E extends Event, T extends Throwable> 
      * @param next next handler
      * @return composed exception handler
      */
-    default EventExceptionHandler<L, E, T> andThen(EventExceptionHandler<L, E, T> next) {
+    default EventExceptionHandler<E, L, T, X> andThen(EventExceptionHandler<E, L, T, X> next) {
         if (next == null) {
             throw new NullPointerException("Next handler must not be null");
         }
