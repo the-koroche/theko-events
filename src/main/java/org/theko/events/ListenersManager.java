@@ -56,6 +56,12 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
     }
 
     /**
+     * Creates a new instance of {@link ListenersManager}.
+     */
+    public ListenersManager() {
+    }
+
+    /**
      * Registers a listener with the specified priority level.
      * <p>
      * Listeners with higher priority will receive events before listeners with lower priority.

@@ -30,7 +30,6 @@ package org.theko.events;
  *
  * @param <E> event type, extends {@link Event}
  * @param <L> listener type, extends {@link Listener}
- * @param <T> classification type for event routing
  * @param <X> exception type to handle
  * 
  * @see EventHandler
