@@ -58,7 +58,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class EventDispatcher<E extends Event, L extends Listener<E>, T> implements ListenersManageable<E, L, T> {
 
-    private final EventExceptionHandler<E, L, T, Throwable> DEFAULT_EXCEPTION_HANDLER = new EventExceptionHandler<>() {
+    private final EventExceptionHandler<E, L, Throwable> DEFAULT_EXCEPTION_HANDLER = new EventExceptionHandler<>() {
         @Override
         public void handle(L listener, E event, Throwable exception) {
             boolean isConsumer = listener == null; // Consumer is anonymous type, so always null
@@ -78,7 +78,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
 
     /* Event dispatching */
     // Mapping from event types to their corresponding handlers.
-    private final Map<T, EventHandler<E, L, T>> eventMap = new ConcurrentHashMap<>();
+    private final Map<T, EventHandler<E, L>> eventMap = new ConcurrentHashMap<>();
 
     // Registered exception handlers in registration order (last registered = first called).
     private final List<ExceptionHandlerWrapper<?>> exceptionHandlers = new CopyOnWriteArrayList<>();
@@ -92,12 +92,12 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
     private class ExceptionHandlerWrapper<X extends Throwable> {
 
         // The wrapped exception handler instance
-        final EventExceptionHandler<E, L, T, X> handler;
+        final EventExceptionHandler<E, L, X> handler;
         
         // The exception type this handler can process
         final Class<X> exceptionType;
 
-        ExceptionHandlerWrapper(EventExceptionHandler<E, L, T, X> handler, Class<X> exceptionType) {
+        ExceptionHandlerWrapper(EventExceptionHandler<E, L, X> handler, Class<X> exceptionType) {
             this.handler = handler;
             this.exceptionType = exceptionType;
         }
@@ -130,7 +130,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
      */
-    public void setEventMap(Map<T, EventHandler<E, L, T>> map) {
+    public void setEventMap(Map<T, EventHandler<E, L>> map) {
         eventMap.clear();
         eventMap.putAll(map);
     }
@@ -169,7 +169,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      */
     public <X extends Throwable> void addExceptionHandler(
             Class<X> exceptionType, 
-            EventExceptionHandler<E, L, T, X> handler) {
+            EventExceptionHandler<E, L, X> handler) {
         
         exceptionHandlers.removeIf(wrapper -> wrapper.exceptionType.equals(exceptionType));
         exceptionHandlers.add(new ExceptionHandlerWrapper<>(handler, exceptionType));
@@ -191,7 +191,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      */
     public void dispatch(T eventType, E event) {
         if (event == null) throw new NullPointerException("Event is null.");
-        EventHandler<E, L, T> handler = (eventType == null) ? null : eventMap.get(eventType);
+        EventHandler<E, L> handler = (eventType == null) ? null : eventMap.get(eventType);
 
         // Process listeners in priority order
         for (L listener : listenersManager.getListeners()) {

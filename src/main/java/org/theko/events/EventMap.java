@@ -66,7 +66,7 @@ import java.util.HashMap;
  * @author Theko
  * @since 1.0
  */
-public class EventMap<E extends Event, L extends Listener<E>, T> extends HashMap<T, EventHandler<E, L, T>> {
+public class EventMap<E extends Event, L extends Listener<E>, T> extends HashMap<T, EventHandler<E, L>> {
 
     /**
      * Creates a new empty event map.

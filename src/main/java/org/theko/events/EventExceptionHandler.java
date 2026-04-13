@@ -41,7 +41,7 @@ package org.theko.events;
  * @since 1.0
  */
 @FunctionalInterface
-public interface EventExceptionHandler<E extends Event, L extends Listener<E>, T, X extends Throwable> {
+public interface EventExceptionHandler<E extends Event, L extends Listener<E>, X extends Throwable> {
     
     /**
      * Handles an exception thrown while processing an event.
@@ -59,7 +59,7 @@ public interface EventExceptionHandler<E extends Event, L extends Listener<E>, T
      * @param next next handler
      * @return composed exception handler
      */
-    default EventExceptionHandler<E, L, T, X> andThen(EventExceptionHandler<E, L, T, X> next) {
+    default EventExceptionHandler<E, L, X> andThen(EventExceptionHandler<E, L, X> next) {
         if (next == null) {
             throw new NullPointerException("Next handler must not be null");
         }

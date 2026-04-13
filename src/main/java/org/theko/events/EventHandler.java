@@ -53,7 +53,6 @@ package org.theko.events;
  *
  * @param <E> event type, extends {@link Event}
  * @param <L> listener type, extends {@link Listener}
- * @param <T> classification type for event routing
  * 
  * @see Event
  * @see EventDispatcher
@@ -63,7 +62,7 @@ package org.theko.events;
  * @since 1.0
  */
 @FunctionalInterface
-public interface EventHandler<E extends Event, L extends Listener<E>, T> {
+public interface EventHandler<E extends Event, L extends Listener<E>> {
     
     /**
      * Handles the given event for the specified listener.
