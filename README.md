@@ -40,7 +40,7 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 
 ### Listeners
 
-- Implement the `Listener<E>` interface to handle events of type `E` with classification `T`.
+- Implement the `Listener<E>` interface to handle events of type `E`.
 - Listeners can have priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST` using the `ListenerPriority` class.
 - Can be registered through `EventDispatcher` or `ListenersManager`.
 
@@ -59,7 +59,7 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 
 - `EventDispatcher<E, L, T>` is the central component that responsible for event dispatching and event routing.
 - Dispatches events to all appropriate listeners and consumers.
-- Exception handling via `EventExceptionHandler<L, E, T>`.
+- Exception handling via `EventExceptionHandler<E, L, X>`.
 - Thread-safe when using concurrent collections.
 
 ### Listeners Manager
@@ -71,18 +71,19 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 
 ### Listeners Manageable
 
-- An interface for classes that can provide access to a `ListenersManager`.
+- `ListenersManageable<E, L, T>` is an interface for classes that can provide access to a `ListenersManager`.
 - Automatically adds listeners and consumers managing to the `ListenersManager` when implemented.
 
 ### Event Exception Handling
 
-- `EventExceptionHandler<L, E, T>` allows custom exception handling during event processing.
+- `EventExceptionHandler<E, L, X>` allows custom exception handling during event processing.
 - Supports chaining via `andThen()` method.
 - Default handler prints stack traces of unhandled exceptions.
 
 ### Event Maps
 
 - `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
+- Extends `HashMap<T, EventHandler<E, L>>` for easy registration and lookup.
 
 ---
 
@@ -202,14 +203,15 @@ public class Main {
 ## Modules / Classes
 
 * `Event` – Base class for all events
+* `EventConsumer<E, T>` – Functional interface for event consumers
+* `EventDispatcher<E, L, T>` – Main event dispatching system
+* `EventExceptionHandler<E, L, X>` – Handles exceptions during event processing in listeners, consumers
+* `EventHandler<E, L>` – Generic event handler interface
+* `EventMap<E, L, T>` – Listener mapping for routing events
 * `Listener<E>` – Generic listener interface
 * `ListenerPriority` – Class defining listener execution priority
-* `ListenersManager<E, L, T>` – Manages listener and consumer registration
 * `ListenersManageable<E, L, T>` – Interface for classes that can provide access to a `ListenersManager`
-* `EventConsumer<E>` – Functional interface for event consumers
-* `EventDispatcher<E, L, T>` – Main event dispatching system
-* `EventMap<E, L, T>` – Listener mapping for routing events
-* `EventExceptionHandler<L, E, T>` – Handles exceptions during event processing in listeners, consumers
+* `ListenersManager<E, L, T>` – Manages listener and consumer registration
 
 ---
 
