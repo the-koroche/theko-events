@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2025 Alex Soloviov (aka Theko)
+ * Copyright (c) 2025-present Alex Soloviov (aka Theko)
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
