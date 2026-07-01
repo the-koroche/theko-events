@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2025 Alex Soloviov (aka Theko)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,13 +34,13 @@ import java.util.List;
  * <pre>{@code
  * class MyClass implements ListenersManageable<MyEvent, MyListener, String> {
  *     private final EventDispatcher<MyEvent, MyListener, String> dispatcher = new EventDispatcher();
- * 
+ *
  *     @Override
  *     public ListenersManager<MyEvent, MyListener, String> getListenersManager() {
  *         return new ListenersManager<>(dispatcher);
  *     }
  * }
- * 
+ *
  * MyClass myClass = new MyClass();
  * // Now MyClass can automatically manage listeners:
  * myClass.addListener(listener);
@@ -49,7 +49,7 @@ import java.util.List;
  * @param <E> the type of event being handled, must extend {@link Event}
  * @param <L> the type of listener being managed, must extend {@link Listener}
  * @param <T> the classification type used for event routing
- * 
+ *
  * @see ListenersManager
  * @see Listener
  * @see EventDispatcher
@@ -71,7 +71,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * <p>
      * Listeners with higher priority will receive events before listeners with lower priority.
      * Multiple listeners with the same priority are processed in registration order.
-     * 
+     *
      * @param priority the priority level for the listener
      * @param listener the listener to register, must not be {@code null}
      * @throws NullPointerException if the listener or priority is {@code null}
@@ -114,7 +114,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * Returns a sorted list of all registered listeners.
      * <p>
      * The list is sorted by the listener priority level ({@link ListenerPriority}).
-     * 
+     *
      * @return a sorted list of all registered listeners
      */
     default List<L> getListeners() {
@@ -126,7 +126,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * <p>
      * Event consumers provide a functional alternative to full listener implementations
      * for simpler event handling scenarios.
-     * 
+     *
      * @param priority the priority level for the consumer
      * @param eventType the specific event type this consumer handles, must not be {@code null}
      * @param consumer the event consumer to register, must not be {@code null}
@@ -140,7 +140,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * Registers an event consumer with the specified priority level.
      * <p>
      * The event type is not specified, so the consumer will receive all events.
-     * 
+     *
      * @param priority the priority level for the consumer
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if either priority or consumer is {@code null}
@@ -196,7 +196,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * Returns a sorted list of all registered event consumers.
      * <p>
      * The list is sorted by the consumer priority level ({@link ListenerPriority}).
-     * 
+     *
      * @return a sorted list of all registered event consumers
      */
     default List<EventConsumer<E, T>> getConsumers() {
@@ -208,7 +208,7 @@ public interface ListenersManageable<E extends Event, L extends Listener<E>, T> 
      * <p>
      * The list is sorted by the consumer priority level ({@link ListenerPriority}).
      * If the event type is {@code null}, all event consumers without an event type are returned.
-     * 
+     *
      * @param eventType the event type to filter by
      * @return a sorted list of all registered event consumers that match the given event type
      */

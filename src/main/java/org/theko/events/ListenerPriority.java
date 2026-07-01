@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2025 Alex Soloviov (aka Theko)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,21 +27,21 @@ package org.theko.events;
 /**
  * Represents a priority for event listeners.
  * <p>
- * The priority determines the order in which listeners are executed: 
+ * The priority determines the order in which listeners are executed:
  * lower values are executed before higher values.
  * <p>
  * Instances are immutable and comparable. You can compare priorities
- * using {@link Comparable#compareTo(Object)}, for example to sort listeners 
+ * using {@link Comparable#compareTo(Object)}, for example to sort listeners
  * in execution order.
  * <p>
  * Predefined standard priorities are provided as public constants:
  * {@link #CRITICAL}, {@link #HIGH}, {@link #NORMAL}, {@link #LOW}, {@link #LOWEST}.
  * Custom priorities can also be created with any non-negative integer value.
- * 
+ *
  * @see Comparable
  * @see Listener
  * @see EventDispatcher
- * 
+ *
  * @author Theko
  * @since 1.0
  */
@@ -63,7 +63,7 @@ public class ListenerPriority implements Comparable<ListenerPriority> {
     public static final ListenerPriority LOWEST = new ListenerPriority(100);
 
     private final int priority;
-    
+
     /**
      * Creates a new listener priority with the given priority.
      * <p>

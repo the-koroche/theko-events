@@ -12,15 +12,15 @@ import java.util.stream.Collectors;
  * <p>
  * This class is responsible for registering, unregistering, and retrieving listeners
  * and event consumers, as well as managing their priority levels.
- * 
+ *
  * @param <E> the type of event being handled, must extend {@link Event}
  * @param <L> the type of listener being managed, must extend {@link Listener}
  * @param <T> the classification type used for event routing
- * 
+ *
  * @see Listener
  * @see EventConsumer
  * @see ListenerPriority
- * 
+ *
  * @author Theko
  * @since 2.0.0
  */
@@ -36,7 +36,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
 
     // Lookup map from original consumer to wrapper, for efficient removal.
     private final Map<EventConsumer<E, T>, EventConsumerWrapper> consumerWrappers = new ConcurrentHashMap<>();
-    
+
     /*
      * Internal wrapper class that associates an {@link EventConsumer} with its
      * specific event type.
@@ -45,7 +45,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
 
         // The wrapped event consumer instance
         final EventConsumer<E, T> consumer;
-        
+
         // The event type this consumer is registered for
         final T eventType;
 
@@ -66,7 +66,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * <p>
      * Listeners with higher priority will receive events before listeners with lower priority.
      * Multiple listeners with the same priority are processed in registration order.
-     * 
+     *
      * @param priority the priority level for the listener
      * @param listener the listener to register, must not be {@code null}
      * @throws NullPointerException if the listener or priority is {@code null}
@@ -114,7 +114,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * Returns a sorted list of all registered listeners.
      * <p>
      * The list is sorted by the listener priority level ({@link ListenerPriority}).
-     * 
+     *
      * @return a sorted list of all registered listeners
      */
     public List<L> getListeners() {
@@ -129,7 +129,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * <p>
      * Event consumers provide a functional alternative to full listener implementations
      * for simpler event handling scenarios.
-     * 
+     *
      * @param priority the priority level for the consumer
      * @param eventType the specific event type this consumer handles, must not be {@code null}
      * @param consumer the event consumer to register, must not be {@code null}
@@ -146,7 +146,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * Registers an event consumer with the specified priority level.
      * <p>
      * The event type is not specified, so the consumer will receive all events.
-     * 
+     *
      * @param priority the priority level for the consumer
      * @param consumer the event consumer to register, must not be {@code null}
      * @throws NullPointerException if either priority or consumer is {@code null}
@@ -197,7 +197,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
     public boolean removeConsumer(EventConsumer<E, T> consumer) {
         EventConsumerWrapper wrapper = consumerWrappers.remove(consumer);
         if (wrapper == null) return false;
-        
+
         return consumers.values().stream()
                 .filter(Objects::nonNull)
                 .anyMatch(list -> list.remove(wrapper));
@@ -207,7 +207,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * Returns a sorted list of all registered event consumers.
      * <p>
      * The list is sorted by the consumer priority level ({@link ListenerPriority}).
-     * 
+     *
      * @return a sorted list of all registered event consumers
      */
     public List<EventConsumer<E, T>> getConsumers() {
@@ -224,7 +224,7 @@ public class ListenersManager<E extends Event, L extends Listener<E>, T> {
      * <p>
      * The list is sorted by the consumer priority level ({@link ListenerPriority}).
      * If the event type is {@code null}, all event consumers without an event type are returned.
-     * 
+     *
      * @param eventType the event type to filter by
      * @return a sorted list of all registered event consumers that match the given event type
      */

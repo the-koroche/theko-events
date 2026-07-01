@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2025 Alex Soloviov (aka Theko)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,19 +40,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *   <li>Supporting event consumption to stop further processing</li>
  * </ul>
  *
- * <p><strong>This class is thread-safe, and dispatching events executes on a caller thread</strong> 
+ * <p><strong>This class is thread-safe, and dispatching events executes on a caller thread</strong>
  *
  * @param <E> event type, extends {@link Event}
  * @param <L> listener type, extends {@link Listener}
  * @param <T> classification type for event routing
- * 
+ *
  * @see Event
  * @see Listener
  * @see EventConsumer
  * @see EventHandler
  * @see EventExceptionHandler
  * @see ListenerPriority
- * 
+ *
  * @author Theko
  * @since 1.0
  */
@@ -71,7 +71,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
             exception.printStackTrace(System.err);
         }
     };
-    
+
     /* Listener management */
     // Provides access to listener management operations for this dispatcher.
     private final ListenersManager<E, L, T> listenersManager = new ListenersManager<>();
@@ -93,7 +93,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
 
         // The wrapped exception handler instance
         final EventExceptionHandler<E, L, X> handler;
-        
+
         // The exception type this handler can process
         final Class<X> exceptionType;
 
@@ -126,7 +126,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      * <p>
      * This method completely replaces the existing event handler mappings with
      * the provided map. Existing mappings are cleared before adding the new ones.
-     * 
+     *
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
      */
@@ -137,7 +137,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
 
     /**
      * Creates a new empty {@link EventMap} with compatible type parameters.
-     * 
+     *
      * @return a new empty event map configured for this dispatcher's types
      * @see #setEventMap(Map)
      */
@@ -147,7 +147,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
 
     /**
      * Returns the listener manager for this dispatcher.
-     * 
+     *
      * @return the listener manager instance, never null
      */
     @Override
@@ -161,16 +161,16 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      * If a handler already exists for the specified exception type, it is replaced
      * with the new handler. Exception handlers are invoked in reverse registration order
      * (last registered, first called) until one successfully handles the exception.
-     * 
+     *
      * @param <X> the type of exception to handle
      * @param exceptionType the class object representing the exception type
      * @param handler the exception handler to register
      * @throws NullPointerException if either exceptionType or handler is {@code null}
      */
     public <X extends Throwable> void addExceptionHandler(
-            Class<X> exceptionType, 
+            Class<X> exceptionType,
             EventExceptionHandler<E, L, X> handler) {
-        
+
         exceptionHandlers.removeIf(wrapper -> wrapper.exceptionType.equals(exceptionType));
         exceptionHandlers.add(new ExceptionHandlerWrapper<>(handler, exceptionType));
     }
@@ -183,10 +183,10 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      * If no exception handler is registered for the exception type, the stack trace is printed.
      * <p>
      * If eventType is null, then only consumers are processed.
-     * 
+     *
      * @param eventType the event classification key to filter consumers by, or null for no filtering
      * @param event the event to dispatch
-     * 
+     *
      * @throws NullPointerException if event is null
      */
     public void dispatch(T eventType, E event) {

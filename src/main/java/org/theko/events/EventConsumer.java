@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2025 Alex Soloviov (aka Theko)
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,12 +27,12 @@ package org.theko.events;
 /**
  * Consumes events of a specific type.
  * <p>
- * Implementations process dispatched events and may call {@link Event#consume()} 
+ * Implementations process dispatched event and may call {@link Event#consume()}
  * to stop further handling.
  *
  * @param <E> event type, extends {@link Event}
  * @param <T> classification type for event routing
- * 
+ *
  * @see Event
  * @see EventDispatcher
  *
@@ -44,7 +44,7 @@ public interface EventConsumer<E extends Event, T> {
 
     /**
      * Processes the given event.
-     * 
+     *
      * @param type event classification key, may be {@code null}
      * @param event event instance
      */
