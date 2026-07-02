@@ -36,6 +36,8 @@ package org.theko.events;
  * @see EventMap
  * @see EventConsumer
  * @see EventDispatcher
+ * @see ListenerPriority
+ * @see ListenersManager
  *
  * @author Theko
  * @since 1.0

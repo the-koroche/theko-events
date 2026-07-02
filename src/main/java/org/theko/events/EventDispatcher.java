@@ -32,14 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Central dispatcher for events, listeners, and consumers in an event-driven system.
  * <p>
- * Responsible for:
- * <ul>
- *   <li>Registering and managing {@link Listener} instances and {@link EventConsumer}s</li>
- *   <li>Dispatching events based on type and priority ({@link ListenerPriority})</li>
- *   <li>Routing exceptions to {@link EventExceptionHandler}s</li>
- *   <li>Supporting event consumption to stop further processing</li>
- * </ul>
- *
+ * Responsible for dispatching events, processing uncaught exceptions, and event mapping.
  * <p><strong>This class is thread-safe, and dispatching events executes on a caller thread</strong>
  *
  * @param <E> event type, extends {@link Event}
@@ -67,10 +60,21 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
             String callerName = isConsumer ? "consumer" : listener.getClass().getSimpleName();
             message = String.format(message, callerName, event.getClass().getSimpleName(), exception.getClass().getSimpleName());
 
-            System.err.println(message);
-            exception.printStackTrace(System.err);
+            logUnhandledException(message, exception);
         }
     };
+
+    /**
+     * Logs unhandled exceptions that occur during event dispatching.
+     * <p>
+     * Default implementation prints the message and stack trace to {@code System.err}.
+     * @param message the message to log
+     * @param exception the exception that was thrown
+     */
+    protected void logUnhandledException(String message, Throwable exception) {
+        System.err.println(message);
+        exception.printStackTrace(System.err);
+    }
 
     /* Listener management */
     // Provides access to listener management operations for this dispatcher.
