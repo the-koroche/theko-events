@@ -1,6 +1,6 @@
 # Theko-Events
 
-**Theko-Events** is a lightweight, flexible, and type-safe event handling library for Java (14+).  
+**Theko-Events** is a lightweight, flexible, and type-safe event handling library for Java (14+).
 It provides a comprehensive framework for event-driven architectures with support for:
 
 - Event dispatching
@@ -8,6 +8,7 @@ It provides a comprehensive framework for event-driven architectures with suppor
 - Listener priorities
 - Exception handling
 - Event consumption
+- Dynamic typed events
 - Thread-safe operation (dispatch occurs on the caller thread)
 
 ---
@@ -17,7 +18,7 @@ It provides a comprehensive framework for event-driven architectures with suppor
 <dependency>
     <groupId>io.github.the-koroche</groupId>
     <artifactId>theko-events</artifactId>
-    <version>3.0.0</version>
+    <version>3.2.0</version>
 </dependency>
 ```
 
@@ -37,6 +38,7 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 - All events extend the abstract `Event` class.
 - Events are immutable data carriers with a creation timestamp.
 - Events support consumption via `consume()` to prevent further propagation.
+- `DynamicEvent` provides a dynamic, weakly-typed event data map container.
 
 ### Listeners
 
@@ -44,16 +46,16 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 - Listeners can have priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST` using the `ListenerPriority` class.
 - Can be registered through `EventDispatcher` or `ListenersManager`.
 
-### Listener Priority 
-
-- `ListenerPriority` provides constants for listener priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST`.
-- Supports custom priorities using the `ListenerPriority(int)` constructor.
-- Lower priorities are executed first.
-
 ### Consumers
 
 - `EventConsumer<E>` provides a functional interface for handling events without full listener classes.
 - Consumers can be registered with priorities and specific event types.
+
+### Listener Priority
+
+- `ListenerPriority` provides constants for listener priorities: `HIGHEST`, `HIGH`, `NORMAL`, `LOW`, `LOWEST`.
+- Supports custom priorities using the `ListenerPriority(int)` constructor.
+- Lower priorities are executed first.
 
 ### Event Dispatcher
 
@@ -61,6 +63,16 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 - Dispatches events to all appropriate listeners and consumers.
 - Exception handling via `EventExceptionHandler<E, L, X>`.
 - Thread-safe when using concurrent collections.
+
+### Dynamic Event Dispatcher
+
+- `DynamicEventDispatcher` is a child class of `EventDispatcher` that supports dynamic, weakly-typed events.
+- Dispatches events to all consumers, with a `String` event type identifier.
+
+### Event Maps
+
+- `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
+- Extends `HashMap<T, EventHandler<E, L>>` for easy registration and lookup.
 
 ### Listeners Manager
 
@@ -79,11 +91,6 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 - `EventExceptionHandler<E, L, X>` allows custom exception handling during event processing.
 - Supports chaining via `andThen()` method.
 - Default handler prints stack traces of unhandled exceptions.
-
-### Event Maps
-
-- `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
-- Extends `HashMap<T, EventHandler<E, L>>` for easy registration and lookup.
 
 ---
 
@@ -184,6 +191,40 @@ public class Main {
 }
 ```
 
+## Dynamic Typed Events Example
+
+```java
+import org.theko.events.DynamicEvent;
+import org.theko.events.DynamicEventDispatcher;
+
+import java.util.Scanner;
+
+public class DynamicType {
+    public static void main(String[] args) {
+        DynamicEventDispatcher dispatcher = new DynamicEventDispatcher();
+
+        dispatcher.addConsumer("on-input", (type, event) -> {
+            System.out.println(String.format("Input: \"%s\" (%d chars)",
+                    event.get("input"), event.get("length")));
+        });
+
+        try (Scanner scanner = new Scanner(System.in)) {
+            while (true) {
+                System.out.print("> ");
+                String input = scanner.nextLine();
+                if (input.isBlank())
+                    break;
+
+                dispatcher.dispatch("on-input", new DynamicEvent()
+                    .with("input", input)
+                    .with("length", input.length())
+                );
+            }
+        }
+    }
+}
+```
+
 ---
 
 ## Thread Safety
@@ -203,8 +244,10 @@ public class Main {
 ## Modules / Classes
 
 * `Event` – Base class for all events
+* `DynamicEvent` – Dynamic, weakly-typed event container
 * `EventConsumer<E, T>` – Functional interface for event consumers
 * `EventDispatcher<E, L, T>` – Main event dispatching system
+* `DynamicEventDispatcher` – Child class of `EventDispatcher` for dynamic events
 * `EventExceptionHandler<E, L, X>` – Handles exceptions during event processing in listeners, consumers
 * `EventHandler<E, L>` – Generic event handler interface
 * `EventMap<E, L, T>` – Listener mapping for routing events
@@ -217,5 +260,5 @@ public class Main {
 
 ## License
 
-MIT License 
+MIT License
 [LICENSE](LICENSE)
