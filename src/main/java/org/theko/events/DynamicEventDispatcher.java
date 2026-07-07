@@ -48,6 +48,9 @@ package org.theko.events;
  * @see DynamicEvent
  * @see EventDispatcher
  * @see Listener
+ *
+ * @author Theko
+ * @since 3.2.0
  */
 public class DynamicEventDispatcher extends
         EventDispatcher<DynamicEvent, Listener<DynamicEvent>, String> {

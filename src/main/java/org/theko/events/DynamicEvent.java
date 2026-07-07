@@ -46,6 +46,9 @@ import java.util.Map;
  *
  * @see DynamicEventDispatcher
  * @see Event
+ *
+ * @author Theko
+ * @since 3.2.0
  */
 public class DynamicEvent extends Event {
 
