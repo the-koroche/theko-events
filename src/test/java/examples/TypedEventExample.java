@@ -13,7 +13,7 @@ import org.theko.events.Listener;
  * better IDE support, and easier refactoring at the cost of some boilerplate.
  */
 
-public class StrongTypedEventExample {
+public class TypedEventExample {
 
     public static class InputEvent extends Event {
         public final String input;
@@ -39,7 +39,9 @@ public class StrongTypedEventExample {
 
     public static void main(String[] args) {
         EventDispatcher<InputEvent, InputListener, String> dispatcher = new EventDispatcher<>();
-
+        var eventMap = dispatcher.createEventMap();
+        eventMap.put("on-input", InputListener::onInput);
+        dispatcher.setEventMap(eventMap);
         dispatcher.addListener(new DefaultInputListener());
 
         try (Scanner scanner = new Scanner(System.in)) {
