@@ -18,7 +18,7 @@ It provides a comprehensive framework for event-driven architectures with suppor
 <dependency>
     <groupId>io.github.the-koroche</groupId>
     <artifactId>theko-events</artifactId>
-    <version>3.2.0</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
@@ -72,7 +72,7 @@ Or from GitHub Releases for JAR: [Releases](https://github.com/the-koroche/theko
 ### Event Maps
 
 - `EventMap<E, L, T>` allows mapping event types to handlers for custom routing.
-- Extends `HashMap<T, EventHandler<E, L>>` for easy registration and lookup.
+- Extends `HashMap<T, BiConsumer<L, E>>` for easy registration and lookup.
 
 ### Listeners Manager
 
@@ -249,7 +249,7 @@ public class DynamicType {
 * `EventDispatcher<E, L, T>` – Main event dispatching system
 * `DynamicEventDispatcher` – Child class of `EventDispatcher` for dynamic events
 * `EventExceptionHandler<E, L, X>` – Handles exceptions during event processing in listeners, consumers
-* `EventHandler<E, L>` – Generic event handler interface
+* `BiConsumer<L, E>` – Generic event handler interface
 * `EventMap<E, L, T>` – Listener mapping for routing events
 * `Listener<E>` – Generic listener interface
 * `ListenerPriority` – Class defining listener execution priority
