@@ -25,6 +25,7 @@
 package org.theko.events;
 
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 
 /**
  * A type-safe map that binds event classification keys to their handlers.
@@ -43,7 +44,7 @@ import java.util.HashMap;
  * eventMap.put(ResourceEventType.OPENED, ResourceListener::onOpened);
  * eventMap.put(ResourceEventType.CLOSED, ResourceListener::onClosed);
  *
- * EventHandler<ResourceListener, ResourceEvent> handler = eventMap.get(eventType);
+ * BiConsumer<ResourceListener, ResourceEvent> handler = eventMap.get(eventType);
  * if (handler != null) {
  *     handler.handle(listener, event);
  * }
@@ -58,7 +59,7 @@ import java.util.HashMap;
  * @param <T> event classification key type
  *
  * @see HashMap
- * @see EventHandler
+ * @see BiConsumer
  * @see EventDispatcher
  * @see Listener
  * @see Event
@@ -66,11 +67,5 @@ import java.util.HashMap;
  * @author Theko
  * @since 1.0
  */
-public class EventMap<E extends Event, L extends Listener<E>, T> extends HashMap<T, EventHandler<E, L>> {
-
-    /**
-     * Creates a new empty event map.
-     */
-    public EventMap() {
-    }
+public class EventMap<E extends Event, L extends Listener<E>, T> extends HashMap<T, BiConsumer<L, E>> {
 }

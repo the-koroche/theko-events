@@ -32,7 +32,6 @@ package org.theko.events;
  * @param <L> listener type, extends {@link Listener}
  * @param <X> exception type to handle
  *
- * @see EventHandler
  * @see Event
  * @see Listener
  *

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 
 /**
  * Central dispatcher for events, listeners, and consumers in an event-driven system.
@@ -42,7 +43,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @see Event
  * @see Listener
  * @see EventConsumer
- * @see EventHandler
  * @see EventExceptionHandler
  * @see ListenerPriority
  *
@@ -82,7 +82,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
 
     /* Event dispatching */
     // Mapping from event types to their corresponding handlers.
-    private final Map<T, EventHandler<E, L>> eventMap = new ConcurrentHashMap<>();
+    private final Map<T, BiConsumer<L, E>> eventMap = new ConcurrentHashMap<>();
 
     // Registered exception handlers in registration order (last registered = first called).
     private final List<ExceptionHandlerWrapper<?>> exceptionHandlers = new CopyOnWriteArrayList<>();
@@ -134,7 +134,7 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      * @param map the new event mapping to use, must not be {@code null}
      * @throws NullPointerException if the provided map is {@code null}
      */
-    public void setEventMap(Map<T, EventHandler<E, L>> map) {
+    public void setEventMap(Map<T, BiConsumer<L, E>> map) {
         eventMap.clear();
         eventMap.putAll(map);
     }
@@ -195,16 +195,18 @@ public class EventDispatcher<E extends Event, L extends Listener<E>, T> implemen
      */
     public void dispatch(T eventType, E event) {
         if (event == null) throw new NullPointerException("Event is null.");
-        EventHandler<E, L> handler = (eventType == null) ? null : eventMap.get(eventType);
+        BiConsumer<L, E> handler = (eventType == null) ? null : eventMap.get(eventType);
 
-        // Process listeners in priority order
-        for (L listener : listenersManager.getListeners()) {
-            if (handler == null || event.isConsumed()) break;
-            if (listener == null) continue;
-            try {
-                handler.handle(listener, event);
-            } catch (Throwable ex) {
-                handleException(listener, event, ex);
+        if (eventType != null) {
+            // Process listeners in priority order
+            for (L listener : listenersManager.getListeners()) {
+                if (handler == null || event.isConsumed()) break;
+                if (listener == null) continue;
+                try {
+                    handler.accept(listener, event);
+                } catch (Throwable ex) {
+                    handleException(listener, event, ex);
+                }
             }
         }
 
