@@ -31,7 +31,7 @@ package org.theko.events;
  * to stop further handling.
  *
  * @param <E> event type, extends {@link Event}
- * @param <I> classification type for event routing
+ * @param <T> classification type for event routing
  *
  * @see Event
  * @see EventDispatcher
@@ -40,7 +40,7 @@ package org.theko.events;
  * @since 1.0
  */
 @FunctionalInterface
-public interface EventConsumer<E extends Event, I> extends Listener<E> {
+public interface EventConsumer<E extends Event, T> extends Listener<E> {
 
     /**
      * Processes the given event.
@@ -48,5 +48,5 @@ public interface EventConsumer<E extends Event, I> extends Listener<E> {
      * @param type event classification key, may be {@code null}
      * @param event event instance
      */
-    void consume(I type, E event);
+    void consume(T type, E event);
 }
